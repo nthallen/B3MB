@@ -16,11 +16,11 @@
 
 // <h> Basic
 
-// <o> I2C Bus clock speed (Hz) <1-3400000>
+// <o> I2C Bus clock speed (Hz) <1-400000>
 // <i> I2C Bus clock (SCL) speed measured in Hz
 // <id> i2c_master_baud_rate
 #ifndef CONF_SERCOM_0_I2CM_BAUD
-#define CONF_SERCOM_0_I2CM_BAUD 1000000
+#define CONF_SERCOM_0_I2CM_BAUD 300000
 #endif
 
 // </h>
@@ -39,7 +39,7 @@
 // <id> i2c_master_arch_trise
 
 #ifndef CONF_SERCOM_0_I2CM_TRISE
-#define CONF_SERCOM_0_I2CM_TRISE 20
+#define CONF_SERCOM_0_I2CM_TRISE 215
 #endif
 
 // <q> Master SCL Low Extended Time-Out (MEXTTOEN)
@@ -104,22 +104,26 @@
 // </e>
 
 #ifndef CONF_SERCOM_0_I2CM_SPEED
-#define CONF_SERCOM_0_I2CM_SPEED 0x02 // Speed: High speed mode
+#define CONF_SERCOM_0_I2CM_SPEED 0x00 // Speed: Standard/Fast mode
 #endif
-#if CONF_SERCOM_0_I2CM_TRISE < 20 || CONF_SERCOM_0_I2CM_TRISE > 40
-#warning Bad I2C Rise time for High speed mode, reset to 20ns
+#if CONF_SERCOM_0_I2CM_TRISE < 215 || CONF_SERCOM_0_I2CM_TRISE > 300
+#warning Bad I2C Rise time for Standard/Fast mode, reset to 215ns
 #undef CONF_SERCOM_0_I2CM_TRISE
-#define CONF_SERCOM_0_I2CM_TRISE 20
+#define CONF_SERCOM_0_I2CM_TRISE 215U
 #endif
 
-//                  gclk_freq - (i2c_scl_freq * 2)
-// BAUD + BAUDLOW = ------------------------------
+//                  gclk_freq - (i2c_scl_freq * 10) - (gclk_freq * i2c_scl_freq * Trise)
+// BAUD + BAUDLOW = --------------------------------------------------------------------
 //                  i2c_scl_freq
-// (HS)BAUD:    register value low  [23:16]
-// (HS)BAUDLOW: register value high [31:24], only used for odd BAUD + BAUDLOW
+// BAUD:    register value low  [7:0]
+// BAUDLOW: register value high [15:8], only used for odd BAUD + BAUDLOW
 #define CONF_SERCOM_0_I2CM_BAUD_BAUDLOW                                                                                \
-	(((CONF_GCLK_SERCOM0_CORE_FREQUENCY - (CONF_SERCOM_0_I2CM_BAUD * 2) + (CONF_SERCOM_0_I2CM_BAUD / 2))               \
-	  / CONF_SERCOM_0_I2CM_BAUD))
+	(((CONF_GCLK_SERCOM0_CORE_FREQUENCY - (CONF_SERCOM_0_I2CM_BAUD * 10U)                                              \
+	   - (CONF_SERCOM_0_I2CM_TRISE * (CONF_SERCOM_0_I2CM_BAUD / 100U) * (CONF_GCLK_SERCOM0_CORE_FREQUENCY / 10000U)    \
+	      / 1000U))                                                                                                    \
+	      * 10U                                                                                                        \
+	  + 5U)                                                                                                            \
+	 / (CONF_SERCOM_0_I2CM_BAUD * 10U))
 #ifndef CONF_SERCOM_0_I2CM_BAUD_RATE
 #if CONF_SERCOM_0_I2CM_BAUD_BAUDLOW > (0xFF * 2)
 #warning Requested I2C baudrate too low, please check
@@ -129,10 +133,9 @@
 #define CONF_SERCOM_0_I2CM_BAUD_RATE 1
 #else
 #define CONF_SERCOM_0_I2CM_BAUD_RATE                                                                                   \
-	(((CONF_SERCOM_0_I2CM_BAUD_BAUDLOW & 0x1)                                                                          \
-	      ? (CONF_SERCOM_0_I2CM_BAUD_BAUDLOW / 2) + ((CONF_SERCOM_0_I2CM_BAUD_BAUDLOW / 2 + 1) << 8)                   \
-	      : (CONF_SERCOM_0_I2CM_BAUD_BAUDLOW / 2))                                                                     \
-	 << 16)
+	((CONF_SERCOM_0_I2CM_BAUD_BAUDLOW & 0x1)                                                                           \
+	     ? (CONF_SERCOM_0_I2CM_BAUD_BAUDLOW / 2) + ((CONF_SERCOM_0_I2CM_BAUD_BAUDLOW / 2 + 1) << 8)                    \
+	     : (CONF_SERCOM_0_I2CM_BAUD_BAUDLOW / 2))
 #endif
 #endif
 
