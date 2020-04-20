@@ -1,5 +1,5 @@
 /*
- * ADS1115_i2c.c
+ * i2c_batt.c
  *
  * Created: 4/14/2020 10:57:26 AM
  * Derived from GitHub master branch of BMM_A0_01\i2c.h
@@ -17,7 +17,7 @@
 #include <hal_i2c_m_async.h>
 #include "pins_perphs_init.h"
 #include "pin_defines.h"
-#include "ADS1115_i2c.h"
+#include "I2C_ADS1115.h"
 #include "Timer_Setup.h"
 #include "subbus.h"
 
@@ -64,27 +64,27 @@ static void batt_record_i2c_error(enum ads_state_t ads_poll_state, int32_t i2c_e
  */
 
 // States
-enum ads_state_t {channel_config, point_to_cnvr_reg, wait_cnvrt, read_cnvrt, cache_cnvrt};
-static enum ads_state_t ads_state = channel_config;
+enum batt_state_t {batt_config,     batt_ptr_cnvr_reg, 
+	              batt_wait_cnvrt, batt_read_cnvrt, 
+				  batt_cache_cnvrt};
+static enum batt_state_t batt_state = batt_config;
 
 // I2C MASTER write Packets and Read buffer
-static uint8_t  wr_config_reg[3] = { 0x01, 0xC9, 0x83};  // 0x01 = sets Addr_Pointer to configuration register
+static uint8_t  batt_cnfg_reg[3] = { 0x01, 0xC9, 0x83};  // 0x01 = sets Addr_Pointer to configuration register
                                                          // 0xC9 = MSByte Config Reg, AINp = AIN0, AINn = GND
 														 //        this will cycle from 0xC9 to 0xF9 to select
 														 //        all four inputs, all single ended
 														 //        and set FSR = +/- 0.512v
 														 //        and set Mode = one-shot
 														 // 0x83 = LBYte Config Reg, sets 128 SPS and ALRT/DRDY = Hi-Z
-static uint8_t  ain_cmd[4] = { 0xC9, 0xD9, 0xE9, 0xF9 }; // 2nd of 3 bytes in wr_config_reg[3], choose which ain_x #
-static uint8_t  ptr_conver_reg[1] = { 0x00 };			 // 0x00 = Sets Addr_Pointer to conversion Data register
-static uint8_t  ads_ibuf[2];                             // buffer for read back of converted data
+static uint8_t  batt_conver_reg[1] = { 0x00 };           // 0x00 = ADS1115's internal address for where to read conversion data
+static uint8_t  batt_ain_cmd[4] = { 0xC9, 0xD9, 0xE9, 0xF9 }; // 2nd of 3 bytes in batt_cnfg_reg[3], choose which batt_ain_x #
+static uint8_t  batt_ads_ibuf[2];                        // buffer for read back of converted data
 
 // Two I2C Slave devices on BATT_MASTER, both ADS1115's, one at I2C device address = 0x48,the other at 0x49.
-#define BATT_A_SLAVE_ADDR 0x48                           // I2C device addresses for ADS1115s on Battery Monitor channel
-#define BATT_B_SLAVE_ADDR 0x49
-static uint8_t  slave_addr = BATT_A_SLAVE_ADDR;
-static uint8_t  dev_x      = 0;                          // Two ADS1115s on I2C bus, indicates which device is up to bat
-static uint8_t  ain_x      = 0;                          // 4 Single Ended Ana_ins on ADS1115, which a_in   is up to bat
+static uint8_t  batt_dev_addr = I2C_A_DEV_ADDR;
+static uint8_t  batt_dev_x = 0;                          // Two ADS1115s on I2C bus, indicates which device is up to bat
+static uint8_t  batt_ain_x = 0;                          // 4 Single Ended Ana_ins on ADS1115, which a_in   is up to bat
 #define NUM_CHANNELS         4                           // total # of single ended a_in's on the ADS1115
 
 #define CONVERT_TIME 8                                   // 7.8ms / sample @ 128 Samples per Second, time in milliseconds
@@ -94,60 +94,60 @@ void i2c_batt_poll(void) {
   if ( !batt_enabled || !batt_txfr_complete ) {          // if not enabled or transfer in process, nothing to do
 	return;
   }
-  switch (ads_state) {    // I2C enabled and no transfer in process so do current state's work, evaluate next state
+  switch (batt_state) {    // I2C enabled and no transfer in process so do current state's work, evaluate next state
 	  
-    case channel_config:                     // Write Config Reg, selects which channel to convert and starts conversion
+    case batt_config:                        // Write Config Reg, selects which channel to convert and starts conversion
       batt_txfr_complete = false;
-	  slave_addr = (dev_x == 0) ? BATT_A_SLAVE_ADDR : BATT_B_SLAVE_ADDR;
-      wr_config_reg[1] = ain_cmd[ain_x];         // pick the correct ain_x when issuing the convert command
-      i2c_m_async_set_slaveaddr(&I2C_BATT, slave_addr, I2C_M_SEVEN);
-      io_write(I2C_BATT_IO, wr_config_reg, 3);  
-      if (dev_x == 0) {
-        dev_x = 1;
-        ads_state = channel_config;              // only one set to correct channel, set 2nd
+	  batt_dev_addr = (batt_dev_x == 0) ? I2C_A_DEV_ADDR : I2C_B_DEV_ADDR;
+      batt_cnfg_reg[1] = batt_ain_cmd[batt_ain_x];   // pick the correct batt_ain_x when issuing the convert command
+      i2c_m_async_set_slaveaddr(&I2C_BATT, batt_dev_addr, I2C_M_SEVEN);
+      io_write(I2C_BATT_IO, batt_cnfg_reg, 3);  
+      if (batt_dev_x == 0) {
+        batt_dev_x = 1;
+        batt_state = batt_config;                    // only one set to correct channel, set 2nd
 	  } else {
-	    dev_x = 0;
-        ads_state = point_to_cnvr_reg;           // both chips set to correct channel, update Addr_Pointer
+	    batt_dev_x = 0;
+        batt_state = batt_ptr_cnvr_reg;              // both chips set to correct channel, update Addr_Pointer
 	  }
     break;
 	  
-    case point_to_cnvr_reg:                  // Set Addr_Pointer to point to conversion data register
+    case batt_ptr_cnvr_reg:                  // Set Addr_Pointer to point to conversion data register
       batt_txfr_complete = false;
-      slave_addr = (dev_x == 0) ? BATT_A_SLAVE_ADDR : BATT_B_SLAVE_ADDR;
-      i2c_m_async_set_slaveaddr(&I2C_BATT, slave_addr, I2C_M_SEVEN);
-      io_write(I2C_BATT_IO, ptr_conver_reg, 1);
-      if (dev_x == 0) {
-	    dev_x = 1;
-	    ads_state = point_to_cnvr_reg;           // only one points to conversion register, point 2nd
+      batt_dev_addr = (batt_dev_x == 0) ? I2C_A_DEV_ADDR : I2C_B_DEV_ADDR;
+      i2c_m_async_set_slaveaddr(&I2C_BATT, batt_dev_addr, I2C_M_SEVEN);
+      io_write(I2C_BATT_IO, batt_conver_reg, 1);
+      if (batt_dev_x == 0) {
+	    batt_dev_x = 1;
+	    batt_state = batt_ptr_cnvr_reg;              // only one points to conversion register, point 2nd
 	  } else {
-	    dev_x = 0;
+	    batt_dev_x = 0;
 	    batt_start_time = count_1msec;
-	    ads_state = wait_cnvrt;                  // both chips points to conversion register, wait for conversion
+	    batt_state = batt_wait_cnvrt;                // both chips points to conversion register, wait for conversion
       }
     break;
 	  
-	case wait_cnvrt:                         // Wait for conversion to complete
-	  ads_state = ( (count_1msec - batt_start_time) > CONVERT_TIME ) ? read_cnvrt : wait_cnvrt;
+	case batt_wait_cnvrt:                    // Wait for conversion to complete
+	  batt_state = ( (count_1msec - batt_start_time) > CONVERT_TIME ) ? batt_read_cnvrt : batt_wait_cnvrt;
     break;
 	  
-    case read_cnvrt:                         // Read converted data
+    case batt_read_cnvrt:                    // Read converted data
       batt_txfr_complete = false;
-      slave_addr = (dev_x == 0) ? BATT_A_SLAVE_ADDR : BATT_B_SLAVE_ADDR;
-      i2c_m_async_set_slaveaddr(&I2C_BATT, slave_addr, I2C_M_SEVEN);
-      io_read(I2C_BATT_IO, ads_ibuf, 2);
-	  ads_state = cache_cnvrt;
+      batt_dev_addr = (batt_dev_x == 0) ? I2C_A_DEV_ADDR : I2C_B_DEV_ADDR;
+      i2c_m_async_set_slaveaddr(&I2C_BATT, batt_dev_addr, I2C_M_SEVEN);
+      io_read(I2C_BATT_IO, batt_ads_ibuf, 2);
+	  batt_state = batt_cache_cnvrt;
     break;
 	  
-    case cache_cnvrt:                        // Check read contents: MSByte's MSBit = status of conversion
-      if (dev_x == 0) {
-		i2c_batt_cache[ain_x].cache = (ads_ibuf[0] << 8) | ads_ibuf[1];
-	    dev_x = 1;
-	    ads_state = read_cnvrt;                  // only one read from, get 2nd
+    case batt_cache_cnvrt:                   // Check read contents: MSByte's MSBit = status of conversion
+      if (batt_dev_x == 0) {
+		i2c_batt_cache[batt_ain_x].cache = (batt_ads_ibuf[0] << 8) | batt_ads_ibuf[1];
+	    batt_dev_x = 1;
+	    batt_state = batt_read_cnvrt;                // only one read from, get 2nd
 	  } else {
-		i2c_batt_cache[ain_x + NUM_CHANNELS].cache = (ads_ibuf[0] << 8) | ads_ibuf[1];
-	    dev_x = 0;
-		ain_x = (ain_x + 1) % NUM_CHANNELS;      // Valid channels are 0, 1, 2, and 3, NUM_CHANNELS = 4
-	    ads_state = channel_config;              // both chips cached, bump channel select and go select it
+		i2c_batt_cache[batt_ain_x + NUM_CHANNELS].cache = (batt_ads_ibuf[0] << 8) | batt_ads_ibuf[1];
+	    batt_dev_x = 0;
+		batt_ain_x = (batt_ain_x+1) % NUM_CHANNELS;  // Valid channels are 0, 1, 2, and 3, NUM_CHANNELS = 4
+	    batt_state = batt_config;                    // both chips cached, bump channel select and go select it
       }
     break;
 	  

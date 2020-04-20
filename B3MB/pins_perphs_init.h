@@ -35,8 +35,9 @@ extern "C" {
 #include <hal_can_async.h>
 
 extern struct i2c_m_async_desc		 I2C_BATT;   // I2C peripheral to A2D's monitoring Batteries
-extern struct i2c_m_async_desc		 I2C_Temp;   // I2C peripheral to A2D's monitoring Temperatures
-extern struct i2c_m_async_desc       I2C_Load;   // I2C peripheral to A2D's monitoring Loads
+extern struct i2c_m_async_desc		 I2C_TMPR;   // I2C peripheral to A2D's monitoring Temperatures
+extern struct i2c_m_async_desc       I2C_LOAD;   // I2C peripheral to A2D's monitoring Loads
+
 extern struct usart_async_descriptor USART_0;    // 
 extern struct timer_descriptor       TIMER_0;    // Timer Counter for 10 usec timing
 extern struct can_async_descriptor   CAN_0;      // Control Module comm's with Host
@@ -45,13 +46,13 @@ void I2C_BATT_PORT_init(void);
 void I2C_BATT_CLOCK_init(void);
 void I2C_BATT_init(void);
 
-void I2C_Temp_PORT_init(void);
-void I2C_Temp_CLOCK_init(void);
-void I2C_Temp_init(void);
+void I2C_tmpr_PORT_init(void);
+void I2C_tmpr_CLOCK_init(void);
+void I2C_tmpr_init(void);
 
-void I2C_Load_PORT_init(void);
-void I2C_Load_CLOCK_init(void);
-void I2C_Load_init(void);
+void I2C_load_PORT_init(void);
+void I2C_load_CLOCK_init(void);
+void I2C_load_init(void);
 
 void USART_0_PORT_init(void);
 void USART_0_CLOCK_init(void);

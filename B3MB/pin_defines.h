@@ -31,8 +31,8 @@
 #define BATT_SCL   GPIO(GPIO_PORTA, 9)
 #define LOAD_SDA   GPIO(GPIO_PORTA, 12)  // A2D I2C comm's, Load Monitoring
 #define LOAD_SCL   GPIO(GPIO_PORTA, 13)
-#define TEMP_SDA   GPIO(GPIO_PORTA, 16)  // A2D I2C comm's, Temperature Monitoring
-#define TEMP_SCL   GPIO(GPIO_PORTA, 17)
+#define TMPR_SDA   GPIO(GPIO_PORTA, 16)  // A2D I2C comm's, Temperature Monitoring
+#define TMPR_SCL   GPIO(GPIO_PORTA, 17)
 
 #define CAN_TX     GPIO(GPIO_PORTA, 24)  // Host comm's
 #define CAN_RX     GPIO(GPIO_PORTA, 25)

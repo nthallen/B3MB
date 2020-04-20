@@ -24,8 +24,8 @@
 #define BATT_BASE_ADDR 0x20
 #define BATT_HIGH_ADDR 0x28
 #define LOAD_BASE_ADDR 0x29
-#define LOAD_HIGH_ADDR 0x30
-#define TEMP_BASE_ADDR 0x21
+#define LOAD_HIGH_ADDR 0x31
+#define TEMP_BASE_ADDR 0x32
 #define TEMP_HIGH_ADDR 0x3A
 
 // Define the subbus's Host Interface Cache structure

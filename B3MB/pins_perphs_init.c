@@ -25,8 +25,8 @@ struct timer_descriptor       TIMER_0;
 struct can_async_descriptor   CAN_0;
 
 struct i2c_m_async_desc I2C_BATT;   // Comm peripheral to A2D's monitoring Batteries
-struct i2c_m_async_desc I2C_Temp;   // Comm peripheral to A2D's monitoring Temperatures
-struct i2c_m_async_desc I2C_Load;   // Comm peripheral to A2D's monitoring Loads
+struct i2c_m_async_desc I2C_TMPR;   // Comm peripheral to A2D's monitoring Temperatures
+struct i2c_m_async_desc I2C_LOAD;   // Comm peripheral to A2D's monitoring Loads
 
 /* ***********************************************************************************
  * Initialize I2C comm's to A2D's monitoring Switchable Batteries Voltage's and Current's
@@ -53,45 +53,45 @@ void I2C_BATT_init(void) {
 /* ************************************************************************* 
  * Initialize I2c comm's to A2D's monitoring Battery Box Temperatures
  */
-void I2C_Temp_PORT_init(void) {
-  gpio_set_pin_pull_mode(TEMP_SDA, GPIO_PULL_OFF);
-  gpio_set_pin_function(TEMP_SDA, PINMUX_PA16C_SERCOM1_PAD0);
-  gpio_set_pin_pull_mode(TEMP_SCL, GPIO_PULL_OFF);
-  gpio_set_pin_function(TEMP_SCL, PINMUX_PA17C_SERCOM1_PAD1);
+void I2C_tmpr_PORT_init(void) {
+  gpio_set_pin_pull_mode(TMPR_SDA, GPIO_PULL_OFF);
+  gpio_set_pin_function(TMPR_SDA, PINMUX_PA16C_SERCOM1_PAD0);
+  gpio_set_pin_pull_mode(TMPR_SCL, GPIO_PULL_OFF);
+  gpio_set_pin_function(TMPR_SCL, PINMUX_PA17C_SERCOM1_PAD1);
 }
 
-void I2C_Temp_CLOCK_init(void) {
+void I2C_tmpr_CLOCK_init(void) {
   hri_gclk_write_PCHCTRL_reg(GCLK, SERCOM1_GCLK_ID_CORE, CONF_GCLK_SERCOM1_CORE_SRC | (1 << GCLK_PCHCTRL_CHEN_Pos));
   hri_gclk_write_PCHCTRL_reg(GCLK, SERCOM1_GCLK_ID_SLOW, CONF_GCLK_SERCOM1_SLOW_SRC | (1 << GCLK_PCHCTRL_CHEN_Pos));
   hri_mclk_set_APBCMASK_SERCOM1_bit(MCLK);
 }
 
-void I2C_Temp_init(void) {
-  I2C_Temp_CLOCK_init();
-  i2c_m_async_init(&I2C_Temp, SERCOM1);
-  I2C_Temp_PORT_init();
+void I2C_tmpr_init(void) {
+  I2C_tmpr_CLOCK_init();
+  i2c_m_async_init(&I2C_TMPR, SERCOM1);
+  I2C_tmpr_PORT_init();
 }
 
 /* ******************************************************************************** 
  * Initialize I2C comm's to A2D's monitoring Switchable Loads Voltage's and Current's
  */
-void I2C_Load_PORT_init(void) {
+void I2C_load_PORT_init(void) {
   gpio_set_pin_pull_mode(LOAD_SDA, GPIO_PULL_OFF);
   gpio_set_pin_function(LOAD_SDA, PINMUX_PA12C_SERCOM2_PAD0);
   gpio_set_pin_pull_mode(LOAD_SCL, GPIO_PULL_OFF);
   gpio_set_pin_function(LOAD_SCL, PINMUX_PA13C_SERCOM2_PAD1);
 }
 
-void I2C_Load_CLOCK_init(void) {
+void I2C_load_CLOCK_init(void) {
   hri_gclk_write_PCHCTRL_reg(GCLK, SERCOM2_GCLK_ID_CORE, CONF_GCLK_SERCOM2_CORE_SRC | (1 << GCLK_PCHCTRL_CHEN_Pos));
   hri_gclk_write_PCHCTRL_reg(GCLK, SERCOM2_GCLK_ID_SLOW, CONF_GCLK_SERCOM2_SLOW_SRC | (1 << GCLK_PCHCTRL_CHEN_Pos));
   hri_mclk_set_APBCMASK_SERCOM2_bit(MCLK);
 }
 
-void I2C_Load_init(void) {
-  I2C_Load_CLOCK_init();
-  i2c_m_async_init(&I2C_Load, SERCOM2);
-  I2C_Load_PORT_init();
+void I2C_load_init(void) {
+	I2C_load_CLOCK_init();
+	i2c_m_async_init(&I2C_LOAD, SERCOM2);
+  I2C_load_PORT_init();
 }
 
 /* ******************************************************************************** 
@@ -261,8 +261,8 @@ void system_init(void) {
   // Driver Peripheral Initialization calls
   //	
   I2C_BATT_init();
-  I2C_Temp_init();
-  I2C_Load_init();
+  I2C_tmpr_init();
+  I2C_load_init();
   USART_0_init();
   TIMER_0_init();
   CAN_0_init();

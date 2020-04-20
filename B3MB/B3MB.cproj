@@ -530,10 +530,10 @@
     <OutputPath>bin\DEBUG_SN4\</OutputPath>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="ADS1115_i2c.c">
+    <Compile Include="i2c_batt.c">
       <SubType>compile</SubType>
     </Compile>
-    <Compile Include="ADS1115_i2c.h">
+    <Compile Include="I2C_ADS1115.h">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="config\hpl_can_config.h">
@@ -933,6 +933,9 @@
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="hri\hri_wdt_c21.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="i2c_load.c">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="pin_defines.h">

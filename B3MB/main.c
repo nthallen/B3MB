@@ -1,15 +1,16 @@
 #include "pins_perphs_init.h"
 #include "subbus.h"
 #include "Timer_Setup.h"
-#include "ADS1115_i2c.h"
+#include "I2C_ADS1115.h"
 
 int main(void) {
   system_init();
   TIMER_0_go();    // Start up the 1 millisecond counter (available at global count_1ms)
 
   // Add in all needed drives and test for success
-  if ( subbus_add_driver(&sb_base)  ||
-  	   subbus_add_driver(&sb_i2c_batt) ) { 
+  if ( subbus_add_driver(&sb_base)     ||
+  	   subbus_add_driver(&sb_i2c_batt) || 
+       subbus_add_driver(&sb_i2c_load)   ) { 
          while(true);                          // if True => some driver is mis configured.
   }		
   	
