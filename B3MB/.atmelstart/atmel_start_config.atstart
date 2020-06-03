@@ -587,7 +587,7 @@ drivers:
           slow_gclk_selection: Generic clock generator 3
   I2C_Temp:
     user_label: I2C_Temp
-    definition: Atmel:SAMC21_Drivers:0.0.1::SAMC21G18A-AN::SERCOM1::driver_config_definition::I2C.Master.Highspeed-mode::HAL:Driver:I2C.Master.Async
+    definition: Atmel:SAMC21_Drivers:0.0.1::SAMC21G18A-AN::SERCOM1::driver_config_definition::I2C.Master.Standard~2FFast-mode::HAL:Driver:I2C.Master.Async
     functionality: I2C
     api: HAL:Driver:I2C_Master_Async
     configuration:
@@ -599,8 +599,8 @@ drivers:
       i2c_master_arch_runstdby: false
       i2c_master_arch_sdahold: 300-600ns hold time
       i2c_master_arch_sexttoen: false
-      i2c_master_arch_trise: 20
-      i2c_master_baud_rate: 1000000
+      i2c_master_arch_trise: 215
+      i2c_master_baud_rate: 300000
     optional_signals: []
     variant:
       specification: SDA=0, SCL=1
@@ -627,7 +627,7 @@ drivers:
           slow_gclk_selection: Generic clock generator 3
   I2C_Load:
     user_label: I2C_Load
-    definition: Atmel:SAMC21_Drivers:0.0.1::SAMC21G18A-AN::SERCOM2::driver_config_definition::I2C.Master.Highspeed-mode::HAL:Driver:I2C.Master.Async
+    definition: Atmel:SAMC21_Drivers:0.0.1::SAMC21G18A-AN::SERCOM2::driver_config_definition::I2C.Master.Standard~2FFast-mode::HAL:Driver:I2C.Master.Async
     functionality: I2C
     api: HAL:Driver:I2C_Master_Async
     configuration:
@@ -639,8 +639,8 @@ drivers:
       i2c_master_arch_runstdby: false
       i2c_master_arch_sdahold: 300-600ns hold time
       i2c_master_arch_sexttoen: false
-      i2c_master_arch_trise: 20
-      i2c_master_baud_rate: 1000000
+      i2c_master_arch_trise: 215
+      i2c_master_baud_rate: 300000
     optional_signals: []
     variant:
       specification: SDA=0, SCL=1

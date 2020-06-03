@@ -184,7 +184,7 @@
           <AcmeProjectActionInfo Action="File" Source="config/hpl_osc32kctrl_config.h" IsConfig="true" Hash="e9o/TJDK3cfkTdnVxdMDjA" />
           <AcmeProjectActionInfo Action="File" Source="config/hpl_oscctrl_config.h" IsConfig="true" Hash="iq+WLoLR0ENniRdCX/E8NQ" />
           <AcmeProjectActionInfo Action="File" Source="config/hpl_port_config.h" IsConfig="true" Hash="rMTNR+5FXtu+wfT1NbfRRA" />
-          <AcmeProjectActionInfo Action="File" Source="config/hpl_sercom_config.h" IsConfig="true" Hash="arAZNaKRtfLdhEeJlRjQ9g" />
+          <AcmeProjectActionInfo Action="File" Source="config/hpl_sercom_config.h" IsConfig="true" Hash="KkO4ynwxUyRayFSXlfq8EQ" />
           <AcmeProjectActionInfo Action="File" Source="config/hpl_tc_config.h" IsConfig="true" Hash="tt+Sr0xOpeNNCB6g6iTXgw" />
           <AcmeProjectActionInfo Action="File" Source="config/peripheral_clk_config.h" IsConfig="true" Hash="DQc9WM+x8bOJuMLHWTC87w" />
         </AcmeActionInfos>
@@ -530,12 +530,6 @@
     <OutputPath>bin\DEBUG_SN4\</OutputPath>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="i2c_batt.c">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="I2C_ADS1115.h">
-      <SubType>compile</SubType>
-    </Compile>
     <Compile Include="config\hpl_can_config.h">
       <SubType>compile</SubType>
     </Compile>
@@ -573,9 +567,6 @@
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="Device_Startup\system_samc21.c">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="examples\driver_examples.c">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="examples\driver_examples.h">
@@ -933,6 +924,15 @@
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="hri\hri_wdt_c21.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="i2c_batt.c">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="I2C_ADS1115.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="examples\driver_examples.c">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="i2c_load.c">

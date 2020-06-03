@@ -32,9 +32,9 @@ struct i2c_m_async_desc I2C_LOAD;   // Comm peripheral to A2D's monitoring Loads
  * Initialize I2C comm's to A2D's monitoring Switchable Batteries Voltage's and Current's
  */
 void I2C_BATT_PORT_init(void) {
-  gpio_set_pin_pull_mode(BATT_SDA, GPIO_PULL_UP);
+  gpio_set_pin_pull_mode(BATT_SDA, GPIO_PULL_OFF);
   gpio_set_pin_function(BATT_SDA, PINMUX_PA08C_SERCOM0_PAD0);
-  gpio_set_pin_pull_mode(BATT_SCL, GPIO_PULL_UP);
+  gpio_set_pin_pull_mode(BATT_SCL, GPIO_PULL_OFF);
   gpio_set_pin_function(BATT_SCL, PINMUX_PA09C_SERCOM0_PAD1);
 }
 
@@ -89,8 +89,8 @@ void I2C_load_CLOCK_init(void) {
 }
 
 void I2C_load_init(void) {
-	I2C_load_CLOCK_init();
-	i2c_m_async_init(&I2C_LOAD, SERCOM2);
+  I2C_load_CLOCK_init();
+  i2c_m_async_init(&I2C_LOAD, SERCOM2);
   I2C_load_PORT_init();
 }
 

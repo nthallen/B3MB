@@ -42,7 +42,6 @@ static subbus_cache_word_t i2c_load_cache[LOAD_HIGH_ADDR - LOAD_BASE_ADDR+1] = {
   { 0, 0, true,  false, false, false, false }, // Offset 6: R: load_4_v    ADS1115_B_AIN_2
   { 0, 0, true,  false, false, false, false }, // Offset 7: R: load_4_i    ADS1115_B_AIN_3
   { 0, 0, true,  false, false, false, false }, // Offset 8: R: load_ic2_status
-
 };
 
 /*
@@ -65,8 +64,8 @@ static void load_record_i2c_error(enum ads_state_t ads_poll_state, int32_t i2c_e
 
 // States
 enum load_state_t {load_config,     load_ptr_cnvr_reg, 
-	              load_wait_cnvrt, load_read_cnvrt, 
-				  load_cache_cnvrt};
+	               load_wait_cnvrt, load_read_cnvrt, 
+				   load_cache_cnvrt};
 static enum load_state_t load_state = load_config;
 
 // I2C MASTER write Packets and Read buffer
