@@ -530,6 +530,12 @@
     <OutputPath>bin\DEBUG_SN4\</OutputPath>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="can_control.c">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="can_control.h">
+      <SubType>compile</SubType>
+    </Compile>
     <Compile Include="config\hpl_can_config.h">
       <SubType>compile</SubType>
     </Compile>

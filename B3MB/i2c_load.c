@@ -6,10 +6,8 @@
  *		Modified by replace all batt_ with load_,
  * Rev_01 Litch - created
  *
- * Three I2C interfaces servicing a total of 7 Quad Input ADS1115's
- *    batt_sb_i2c - 2 ADS1115's, single ended, (Voltage and Current) x (BATT1 - BATT4)
+ * An I2C interfaces servicing a total of 2 Quad Input ADS1115's
  *    load_sb_i2c - 2 ADS1115's, single ended, (Voltage and Current) x (LOAD1 - LOAD4)
- *    temp_sb_i2c - 3 ADS1115's, differential, Batt_Bus V_monitor, TEMP1 - TEMP5 (temperatures)
  */ 
 
 #include <utils.h>
@@ -41,7 +39,7 @@ static subbus_cache_word_t i2c_load_cache[LOAD_HIGH_ADDR - LOAD_BASE_ADDR+1] = {
   { 0, 0, true,  false, false, false, false }, // Offset 5: R: load_3_i    ADS1115_B_AIN_1
   { 0, 0, true,  false, false, false, false }, // Offset 6: R: load_4_v    ADS1115_B_AIN_2
   { 0, 0, true,  false, false, false, false }, // Offset 7: R: load_4_i    ADS1115_B_AIN_3
-  { 0, 0, true,  false, false, false, false }, // Offset 8: R: load_ic2_status
+//  { 0, 0, true,  false, false, false, false }, // Offset 8: R: load_ic2_status
 };
 
 /*
@@ -69,15 +67,15 @@ enum load_state_t {load_config,     load_ptr_cnvr_reg,
 static enum load_state_t load_state = load_config;
 
 // I2C MASTER write Packets and Read buffer
-static uint8_t  load_cnfg_reg[3] = { 0x01, 0xC9, 0x83};  // 0x01 = sets Addr_Pointer to configuration register
-                                                         // 0xC9 = MSByte Config Reg, AINp = AIN0, AINn = GND
+static uint8_t  load_cnfg_reg[3] = { 0x01, 0xC7, 0x83};  // 0x01 = sets Addr_Pointer to configuration register
+                                                         // 0xC7 = MSByte Config Reg, AINp = AIN0, AINn = GND
 														 //        this will cycle from 0xC9 to 0xF9 to select
 														 //        all four inputs, all single ended
-														 //        and set FSR = +/- 0.512v
+														 //        and set FSR = +/- 1.024v
 														 //        and set Mode = one-shot
 														 // 0x83 = LBYte Config Reg, sets 128 SPS and ALRT/DRDY = Hi-Z
 static uint8_t  load_conver_reg[1] = { 0x00 };           // 0x00 = ADS1115's internal address for where to read conversion data
-static uint8_t  load_ain_cmd[4] = { 0xC9, 0xD9, 0xE9, 0xF9 }; // 2nd of 3 bytes in load_cnfg_reg[3], choose which load_ain_x #
+static uint8_t  load_ain_cmd[4] = { 0xC7, 0xD7, 0xE7, 0xF7 }; // 2nd of 3 bytes in load_cnfg_reg[3], choose which load_ain_x #
 static uint8_t  load_ads_ibuf[2];                        // buffer for read back of converted data
 
 // Two I2C Slave devices on LOAD_MASTER, both ADS1115's, one at I2C device address = 0x48,the other at 0x49.

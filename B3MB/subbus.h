@@ -8,9 +8,9 @@
 // All boards must support these subbus Baseline Cache Addresses / Information
 #define SUBBUS_FAIL_RESERVED        0xF000
 #define SUBBUS_INTA_ADDR            0x0001
-#define SUBBUS_BDID_ADDR            0x0006  // Board ID, 6 = B3MB, 28v
+#define SUBBUS_BDID_ADDR            0x0002  // Board ID, 6 = B3MB, 28v
 #define SUBBUS_BLDNO_ADDR           0x0003  // Firmware Build Number
-#define SUBBUS_BDSN_ADDR            0x0001  // Board Serial Number
+#define SUBBUS_BDSN_ADDR            0x0004  // Board Serial Number
 #define SUBBUS_INSTID_ADDR          0x0005  // Instrument ID	
 #define SUBBUS_FAIL_ADDR            0x0006  // Aircraft Interface Fail Indicator
 #define SUBBUS_SWITCHES_ADDR        0x0007  // What's this ????
@@ -21,12 +21,14 @@
 #define SUBBUS_MAX_DRIVERS          7
 
 // Add Board Specific Cache Addresses here
-#define BATT_BASE_ADDR 0x20
-#define BATT_HIGH_ADDR 0x28
-#define LOAD_BASE_ADDR 0x29
-#define LOAD_HIGH_ADDR 0x31
-#define TEMP_BASE_ADDR 0x32
-#define TEMP_HIGH_ADDR 0x3A
+#define BATT_BASE_ADDR   0x20
+#define BATT_HIGH_ADDR   0x27
+#define LOAD_BASE_ADDR   0x28
+#define LOAD_HIGH_ADDR   0x2F
+#define TEMP_BASE_ADDR   0x30
+#define TEMP_HIGH_ADDR   0x37
+#define ON_OFF_BASE_ADDR 0x38
+#define ON_OFF_HIGH_ADDR 0x4F
 
 // Define the subbus's Host Interface Cache structure
 typedef struct {
@@ -46,7 +48,7 @@ typedef struct {
   subbus_cache_word_t *cache;         // the cache structured memory locations themselves
   void (*reset)(void);                // driver function to invoke (can be null) during subbus resets
   void (*poll)(void);                 // driver function to invoke (can be null) during subbus polling
-  void (*sb_action)(uint16_t offset); // driver function to invoke (can be null on Host action dynamic cache
+  void (*sb_action)(uint16_t offset); // driver function to invoke (can be null) on Host action dynamic cache
   bool initialized;                   // Flag, driver initialized ?
 } subbus_driver_t;
 
@@ -63,6 +65,12 @@ void subbus_poll(void);
 bool subbus_add_driver(subbus_driver_t *driver);
 extern subbus_driver_t sb_base;
 extern subbus_driver_t sb_board_desc;
+
+// List additional drivers here
+extern subbus_driver_t sb_on_off;
+extern subbus_driver_t sb_i2c_batt;
+extern subbus_driver_t sb_i2c_load;
+extern subbus_driver_t sb_i2c_tmpr;
 
 // subbus enabled interrupt functions available to all invoked subbus drivers
 #define SUBBUS_INTERRUPTS           0

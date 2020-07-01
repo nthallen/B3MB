@@ -27,12 +27,8 @@
 #define I2C_C_DEV_ADDR 0x4A    //                                    Location C
 #define CONVERSION_REG 0       // ADS1115s internal conversion register address (where to read data)
 
-extern subbus_driver_t sb_i2c_batt;
-extern subbus_driver_t sb_i2c_load;
-extern subbus_driver_t sb_i2c_tmpr;
-
 void batt_enable(bool value);  // I2C Comm to A2Ds for Ideal Diode Isolated Battery Voltage and Current
 void load_enable(bool value);  // I2C_Comm to A2Ds for                         Load Voltage and Current
-void tmpr_enable(bool value);  // I2C Comm to  A2Ds for Battery Bus Voltage and 5 Temperature Sensors
+void tmpr_enable(bool value);  // I2C Comm to A2Ds for Battery Bus Voltage and 5 Temperature Sensors
 
 #endif /* ADS1115_I2C_H_ */
