@@ -564,7 +564,7 @@ classdef subbusd_slcan_litch2 < handle
     function bvals = words2bytes(words)
       % Internal function to convert column of 16-bit words into an
       % interleaved column of 8-bit bytes.
-      words = subbusd_slcan.check_column('words2bytes', 'words', words);
+      words = subbusd_slcan_litch2.check_column('words2bytes', 'words', words);
       barray = [ mod(words,256), floor(words/256) ]';
       bvals = barray(:);
     end
@@ -628,8 +628,8 @@ classdef subbusd_slcan_litch2 < handle
     function str = decode_SBSLCAN(CAN_ID, cmd_code, data)
       % Decodes a full subbus CAN protocol message into text
       str = sprintf('%s cmd:%d=[%s] data:%s', ...
-        subbusd_slcan.decode_CAN_ID(CAN_ID), cmd_code, ...
-        subbusd_slcan.decode_cmd_v(cmd_code), ...
+        subbusd_slcan_litch2.decode_CAN_ID(CAN_ID), cmd_code, ...
+        subbusd_slcan_litch2.decode_cmd_v(cmd_code), ...
         sprintf(' %02X',data));
     end
   end
