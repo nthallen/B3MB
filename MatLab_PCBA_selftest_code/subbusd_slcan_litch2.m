@@ -140,7 +140,9 @@ classdef subbusd_slcan_litch2 < handle
         isobj = 1;
         fopen(sl);
         isopen = 1;
-        set(sl,'Timeout',0.1,'Terminator',13);
+        % 
+        % changed Timeout to 0.2 for too many timeouts
+        set(sl,'Timeout',0.2,'Terminator',13);
         warning('off','MATLAB:serial:fgetl:unsuccessfulRead');
         tline = 'a';
         while ~isempty(tline)
