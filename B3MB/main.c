@@ -13,6 +13,7 @@ int main(void) {
        subbus_add_driver(&sb_can_desc)   ||
   	   subbus_add_driver(&sb_i2c_batt)   || 
        subbus_add_driver(&sb_i2c_load)   ||
+       subbus_add_driver(&sb_i2c_tmpr)   ||
        subbus_add_driver(&sb_on_off)     ||
 	   subbus_add_driver(&sb_can)          ) { 
          while(true);                          // if True => some driver is mis configured.

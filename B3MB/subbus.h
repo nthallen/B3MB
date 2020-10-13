@@ -21,12 +21,13 @@
 #define SUBBUS_MAX_DRIVERS          7
 
 // Add Board Specific Cache Addresses here
-#define BATT_BASE_ADDR   0x20
-#define BATT_HIGH_ADDR   0x27
-#define LOAD_BASE_ADDR   0x28
-#define LOAD_HIGH_ADDR   0x2F
-#define TEMP_BASE_ADDR   0x30
-#define TEMP_HIGH_ADDR   0x37
+//  --Moved to i2c_ina1115.h
+// #define BATT_BASE_ADDR   0x20
+// #define BATT_HIGH_ADDR   0x27
+// #define LOAD_BASE_ADDR   0x28
+// #define LOAD_HIGH_ADDR   0x2F
+// #define TEMP_BASE_ADDR   0x30
+// #define TEMP_HIGH_ADDR   0x37
 #define ON_OFF_BASE_ADDR 0x38
 #define ON_OFF_HIGH_ADDR 0x4F
 

@@ -30,7 +30,7 @@ static struct io_descriptor *I2C_BATT_IO;                         // ASF4 HAL i2
  * Host Accessible Cache Address space for Battery Monitoring information
  *
  */
-static subbus_cache_word_t i2c_batt_cache[BATT_HIGH_ADDR - BATT_BASE_ADDR+1] = {
+static subbus_cache_word_t i2c_batt_cache[I2C_BATT_HIGH_ADDR - I2C_BATT_BASE_ADDR+1] = {
   { 0, 0, true,  false, false, false, false }, // Offset 0: R: batt_1_v    ADS1115_A_AIN_0
   { 0, 0, true,  false, false, false, false }, // Offset 1: R: batt_1_i    ADS1115_A_AIN_1
   { 0, 0, true,  false, false, false, false }, // Offset 2: R: batt_2_v    ADS1115_A_AIN_2
@@ -187,7 +187,7 @@ static void i2c_batt_reset() {
 }
 
 subbus_driver_t sb_i2c_batt = {
-  BATT_BASE_ADDR, BATT_HIGH_ADDR, // address range for Battery Monitoring
+  I2C_BATT_BASE_ADDR, I2C_BATT_HIGH_ADDR, // address range for Battery Monitoring
   i2c_batt_cache,                 // Host accessible cache structure
   i2c_batt_reset,                 // reset function
   i2c_batt_poll,                  // poll function

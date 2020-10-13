@@ -30,7 +30,7 @@ static struct io_descriptor *I2C_LOAD_IO;                         // ASF4 HAL i2
  * Host Accessible Cache Address space for Load Monitoring information
  *
  */
-static subbus_cache_word_t i2c_load_cache[LOAD_HIGH_ADDR - LOAD_BASE_ADDR+1] = {
+static subbus_cache_word_t i2c_load_cache[I2C_LOAD_HIGH_ADDR - I2C_LOAD_BASE_ADDR+1] = {
   { 0, 0, true,  false, false, false, false }, // Offset 0: R: load_1_v    ADS1115_A_AIN_0
   { 0, 0, true,  false, false, false, false }, // Offset 1: R: load_1_i    ADS1115_A_AIN_1
   { 0, 0, true,  false, false, false, false }, // Offset 2: R: load_2_v    ADS1115_A_AIN_2
@@ -185,7 +185,7 @@ static void i2c_load_reset() {
 }
 
 subbus_driver_t sb_i2c_load = {
-  LOAD_BASE_ADDR, LOAD_HIGH_ADDR, // address range for Load Monitoring
+  I2C_LOAD_BASE_ADDR, I2C_LOAD_HIGH_ADDR, // address range for Load Monitoring
   i2c_load_cache,                 // Host accessible cache structure
   i2c_load_reset,                 // reset function
   i2c_load_poll,                  // poll function

@@ -27,6 +27,14 @@
 #define I2C_C_DEV_ADDR 0x4A    //                                    Location C
 #define CONVERSION_REG 0       // ADS1115s internal conversion register address (where to read data)
 
+// Add Board Specific Cache Addresses here
+#define I2C_BATT_BASE_ADDR   0x20
+#define I2C_BATT_HIGH_ADDR   0x27
+#define I2C_LOAD_BASE_ADDR   0x28
+#define I2C_LOAD_HIGH_ADDR   0x2F
+#define I2C_TMPR_BASE_ADDR   0x30
+#define I2C_TMPR_HIGH_ADDR   0x35
+
 void batt_enable(bool value);  // I2C Comm to A2Ds for Ideal Diode Isolated Battery Voltage and Current
 void load_enable(bool value);  // I2C_Comm to A2Ds for                         Load Voltage and Current
 void tmpr_enable(bool value);  // I2C Comm to A2Ds for Battery Bus Voltage and 5 Temperature Sensors
