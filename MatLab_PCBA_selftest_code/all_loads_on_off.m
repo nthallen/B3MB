@@ -1,13 +1,16 @@
 function all_loads_on_off(canobj, state)
 
-B3MB_LOAD1_ADDR = 60;
-B3MB_LOAD2_ADDR = 61;
-B3MB_LOAD3_ADDR = 62;
-B3MB_LOAD4_ADDR = 63;
+% Edited Single word encoded commands
+B3MB_CMD_ADDR = 64; % 0x40
+B3MB_ALL_LOADS_OFF_CMD = 16;
+B3MB_ALL_LOADS_ON_CMD = 17;
 
-canobj.write_ack(1, B3MB_LOAD1_ADDR, state);
-canobj.write_ack(1, B3MB_LOAD2_ADDR, state);
-canobj.write_ack(1, B3MB_LOAD3_ADDR, state);
-canobj.write_ack(1, B3MB_LOAD4_ADDR, state);
+if state = 0 
+  canobj.write_ack(1, B3MB_CMD_ADDR, B3MB_ALL_LOADS_OFF_CMD);
+elseif state =1
+  canobj.write_ack(1, B3MB_CMD_ADDR, B3MB_ALL_LOADS_ON_CMD);
+else
+  fprintf(' ** Invalid Command Value **');
+end
 
 end

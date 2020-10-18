@@ -20,17 +20,6 @@
 
 #define SUBBUS_MAX_DRIVERS          7
 
-// Add Board Specific Cache Addresses here
-//  --Moved to i2c_ina1115.h
-// #define BATT_BASE_ADDR   0x20
-// #define BATT_HIGH_ADDR   0x27
-// #define LOAD_BASE_ADDR   0x28
-// #define LOAD_HIGH_ADDR   0x2F
-// #define TEMP_BASE_ADDR   0x30
-// #define TEMP_HIGH_ADDR   0x37
-#define ON_OFF_BASE_ADDR 0x38
-#define ON_OFF_HIGH_ADDR 0x4F
-
 // Define the subbus's Host Interface Cache structure
 typedef struct {
   uint16_t cache;    // The current value of this word as written by hardware
@@ -66,12 +55,6 @@ void subbus_poll(void);
 bool subbus_add_driver(subbus_driver_t *driver);
 extern subbus_driver_t sb_base;
 extern subbus_driver_t sb_board_desc;
-
-// List additional drivers here
-extern subbus_driver_t sb_on_off;
-extern subbus_driver_t sb_i2c_batt;
-extern subbus_driver_t sb_i2c_load;
-extern subbus_driver_t sb_i2c_tmpr;
 
 // subbus enabled interrupt functions available to all invoked subbus drivers
 #define SUBBUS_INTERRUPTS           0

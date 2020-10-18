@@ -1,8 +1,14 @@
 function [val2] = getB3MB_ana(canobj, vars, samps, dly)
-
 %% ***************************************************************
-% Get some data under current conditions                          
+% Get some data under current conditions
+% Scan through all Loads, 
 %
+
+if vars > 23 
+    fprintf('\n ERROR : Number of Variables exceeds Maximum \n\n');
+    val2 = 0;
+    return;
+end
 B3MB_MON_ADDR = 32;           % start of cache addr for analog monitor
 
 val = zeros(vars, samps);
@@ -36,6 +42,7 @@ val2(13:16,:) = val(10:2:16,:)*ILS;                 % in amps  at Iload(x)
 % Adding third i2c bus
 val2(17, :) = val(17, :)*VTLSB*(Rbt+Rdv)/Rdv;         % in volts at Vbus
 val2(18:22, :) = val(18:22, :)*VTLSB;               % in volts at Thermistor channels
+val2(23, :) = val(23, :);
 
 pause(0.01)
 
