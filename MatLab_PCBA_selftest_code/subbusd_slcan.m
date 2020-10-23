@@ -1,4 +1,4 @@
-classdef subbusd_slcan_litch2 < handle
+classdef subbusd_slcan < handle
   % A subbusd_slcan object provides subbus level access to a
   % serial line CAN (SLCAN) interface.
   %
@@ -50,7 +50,7 @@ classdef subbusd_slcan_litch2 < handle
   end
   
   methods
-    function self = subbusd_slcan_litch2(port)
+    function self = subbusd_slcan(port)
       % sbsl = subbusd_slcan;
       % sbsl = subbusd_slcan(port);
       % 
@@ -230,27 +230,33 @@ classdef subbusd_slcan_litch2 < handle
       %
       % See Also:
       %   subbusd_slcan.CAN_send
-      str = fgetl(self.s);
-      if isempty(str)
-        error('Timeout receiving from CAN');
+      while true
+        str = fgetl(self.s);
+        if isempty(str)
+          error('Timeout receiving from CAN');
+        end
+        if self.verbose_slcan
+          fprintf(1,'Recd: %s\n', str);
+        end
+        % check for timeout, error response, etc.
+        A = sscanf(str, 't%03X%1X');
+        if length(A) ~= 2
+          warning('Invalid response from CAN: "%s"', str);
+          continue;
+        end
+        if A(1) ~= CAN_id + 2^6
+          warning('Invalid response ID: %03X, expected %03X', A(1), CAN_id+2^6);
+          continue;
+        end
+        B = sscanf(str(6:end), '%02X');
+        if A(2) ~= length(B)
+          warning('dlc (%d) did not match packet length (%d) "%s"', ...
+            A(2), length(B));
+          continue;
+        end
+        result = B;
+        break;
       end
-      if self.verbose_slcan
-        fprintf(1,'Recd: %s\n', str);
-      end
-      % check for timeout, error response, etc.
-      A = sscanf(str, 't%03X%1X');
-      if length(A) ~= 2
-        error('Invalid response from CAN: "%s"', str);
-      end
-      if A(1) ~= CAN_id + 2^6
-        error('Invalid response ID: %03X, expected %03X', A(1), CAN_id+2^6);
-      end
-      B = sscanf(str(6:end), '%02X');
-      if A(2) ~= length(B)
-        error('dlc (%d) did not match packet length (%d) "%s"', ...
-          A(2), length(B));
-      end
-      result = B;
     end
     
     function ID = next_req_ID(self)
@@ -566,7 +572,7 @@ classdef subbusd_slcan_litch2 < handle
     function bvals = words2bytes(words)
       % Internal function to convert column of 16-bit words into an
       % interleaved column of 8-bit bytes.
-      words = subbusd_slcan_litch2.check_column('words2bytes', 'words', words);
+      words = subbusd_slcan.check_column('words2bytes', 'words', words);
       barray = [ mod(words,256), floor(words/256) ]';
       bvals = barray(:);
     end
@@ -630,8 +636,8 @@ classdef subbusd_slcan_litch2 < handle
     function str = decode_SBSLCAN(CAN_ID, cmd_code, data)
       % Decodes a full subbus CAN protocol message into text
       str = sprintf('%s cmd:%d=[%s] data:%s', ...
-        subbusd_slcan_litch2.decode_CAN_ID(CAN_ID), cmd_code, ...
-        subbusd_slcan_litch2.decode_cmd_v(cmd_code), ...
+        subbusd_slcan.decode_CAN_ID(CAN_ID), cmd_code, ...
+        subbusd_slcan.decode_cmd_v(cmd_code), ...
         sprintf(' %02X',data));
     end
   end

@@ -20,7 +20,7 @@
 %% ****************************************************************
 % Estabish CAN connection to B3MB PCBA
 %
-sbsl = subbusd_slcan_litch2;    % create the subbus_serial_CAN object
+sbsl = subbusd_slcan;           % create the subbus_serial_CAN object
 sbsl.close;                     % close its serial port
 sbsl.open;                      % open its serial port
 val = sbsl.SBCAN_read_addrs(1,2); % board_ID
