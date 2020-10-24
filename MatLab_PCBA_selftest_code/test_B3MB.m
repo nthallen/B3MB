@@ -62,15 +62,19 @@ B3MB_ALL_LOADS_ON = 17;
 %       B3MB_BATT3_ADDR, B3MB_BATT4_ADDR, 0];
 
 % all_loads_on_off(sbsl, 0);
-sbsl.write_ack(1, B3MB_CMD_ADDR, B3MB_ALL_LOADS_OFF);
+B3MB_cmd(sbsl, B3MB_ALL_LOADS_OFF, 3); % B3MB_ALL_LOADS_OFF cmd. 3 tries. 
 % sbsl.write_ack(1, B3MB_BATT1_ADDR, 1);
-sbsl.write_ack(1, B3MB_CMD_ADDR, B3MB_BATT1_ON);
+% sbsl.write_ack(1, B3MB_CMD_ADDR, B3MB_BATT1_ON);
+B3MB_cmd(sbsl, B3MB_BATT1_ON, 3); % B3MB_BATT1_ON cmd. 3 tries. 
 % sbsl.write_ack(1, B3MB_BATT2_ADDR, 0);
-sbsl.write_ack(1, B3MB_CMD_ADDR, B3MB_BATT2_OFF);
+% sbsl.write_ack(1, B3MB_CMD_ADDR, B3MB_BATT2_OFF);
+B3MB_cmd(sbsl, B3MB_BATT2_OFF, 3); % B3MB_BATT2_OFF cmd. 3 tries. 
 % sbsl.write_ack(1, B3MB_BATT3_ADDR, 0);
-sbsl.write_ack(1, B3MB_CMD_ADDR, B3MB_BATT3_OFF);
+% sbsl.write_ack(1, B3MB_CMD_ADDR, B3MB_BATT3_OFF);
+B3MB_cmd(sbsl, B3MB_BATT3_OFF, 3); % B3MB_BATT3_OFF cmd. 3 tries. 
 % sbsl.write_ack(1, B3MB_BATT4_ADDR, 0);
-sbsl.write_ack(1, B3MB_CMD_ADDR, B3MB_BATT4_OFF);
+% sbsl.write_ack(1, B3MB_CMD_ADDR, B3MB_BATT4_OFF);
+B3MB_cmd(sbsl, B3MB_BATT4_OFF, 3); % B3MB_BATT4_OFF cmd. 3 tries. 
 pause(0.5)
 
 %% *******************************************************************
@@ -85,7 +89,7 @@ JP  = [7, 8, 9, 10];
 NUM_CONDS = length(Vin); 
 NUM_BATTS = 4;
 NUM_LOADS = 4;
-NUM_VARS  = 23;
+NUM_VARS  = 23; % all variables
 NUM_SAMPS = 30;
 NUM_TEMPS = 5;
 % DELAY     = 0.078;
@@ -111,11 +115,13 @@ for nc = 1:NUM_CONDS
     connSpec='Collecting Data for Condition %1.0f at connector J%1.0f\n';
     fprintf(connSpec, nc, JP(nl));
 %     all_loads_on_off(sbsl, 1)           % turn all loads on, get some data
-    sbsl.write_ack(1, B3MB_CMD_ADDR, B3MB_ALL_LOADS_ON);  % turn all loads on, get some data
+%     sbsl.write_ack(1, B3MB_CMD_ADDR, B3MB_ALL_LOADS_ON);  % turn all loads on, get some data
+    B3MB_cmd(sbsl, B3MB_ALL_LOADS_ON, 3); % B3MB_ALL_LOADS_ON cmd. 3 tries. 
     pause(0.5)
     for nb = 1:NUM_BATTS
 %       sbsl.write_ack(1, BATT(nb), 1);
-      sbsl.write_ack(1, B3MB_CMD_ADDR, B3MB_BATT_ON(nb)); % Redundant?
+%       sbsl.write_ack(1, B3MB_CMD_ADDR, B3MB_BATT_ON(nb)); % 
+      B3MB_cmd(sbsl, B3MB_BATT_ON(nb), 3); % nb B3MB_BATT_ON cmd. 3 tries. 
       pause(0.5)
       while(true)
         try
@@ -123,33 +129,39 @@ for nc = 1:NUM_CONDS
           break
         catch MExc
           disp(MExc);
-          sbsl.write_ack(1, B3MB_CMD_ADDR, B3MB_ALL_LOADS_OFF); % Turn All Loads off for safety
-          warning('Re-trying BATT %u',nb);
-          fprintf('\nHit any Key when ready\n');
-          pause
-          sbsl.write_ack(1, B3MB_CMD_ADDR, B3MB_BATT_ON(nb)); % Redundant?
-          pause(0.5)
         end
+%         sbsl.write_ack(1, B3MB_CMD_ADDR, B3MB_ALL_LOADS_OFF); % Turn All Loads off for safety
+        B3MB_cmd(sbsl, B3MB_ALL_LOADS_OFF, 3); % B3MB_ALL_LOADS_OFF cmd. 3 tries. 
+        warning('Re-trying BATT %u',nb);
+        fprintf('\nHit any Key when ready\n');
+        pause
+%         sbsl.write_ack(1, B3MB_CMD_ADDR, B3MB_ALL_LOADS_ON); 
+        B3MB_cmd(sbsl, B3MB_ALL_LOADS_ON, 3); % B3MB_ALL_LOADS_ON cmd. 3 tries. 
+        pause(0.5)
       end
 %       sbsl.write_ack(1, BATT(nb+1), 1);  % always want one BATT on
       if nb < 4
-          sbsl.write_ack(1, B3MB_CMD_ADDR, B3MB_BATT_ON(nb+1));  % always want one BATT on
+%          sbsl.write_ack(1, B3MB_CMD_ADDR, B3MB_BATT_ON(nb+1));  % always want one BATT on
+        B3MB_cmd(sbsl, B3MB_BATT_ON(nb+1), 3); % nb+1 B3MB_BATT_ON cmd. 3 tries. 
       else
-          sbsl.write_ack(1, B3MB_CMD_ADDR, B3MB_BATT_ON(1));  % always want one BATT on
+%          sbsl.write_ack(1, B3MB_CMD_ADDR, B3MB_BATT_ON(1));  % always want one BATT on
+        B3MB_cmd(sbsl, B3MB_BATT_ON(1), 3); % B3MB_BATT1_ON cmd. 3 tries. 
       end
       pause(0.5)
 %       sbsl.write_ack(1, BATT(nb), 0);
-      sbsl.write_ack(1, B3MB_CMD_ADDR, B3MB_BATT_OFF(nb));
+%       sbsl.write_ack(1, B3MB_CMD_ADDR, B3MB_BATT_OFF(nb));
+      B3MB_cmd(sbsl, B3MB_BATT_OFF(nb), 3); % nb B3MB_BATT_OFF cmd. 3 tries. 
+%       Mean and STDev      
       signal(nc,nl,nb,:) = mean(raw(nc,nl,nb,:,:), 5);
       noise(nc,nl,nb,:) = std(raw(nc,nl,nb,:,:),0, 5); % w = 0 for default normalization
- %    noise(nc,:,:,:)  =  std(raw(nc,:,:,:,:));     % ***** CHECK THIS ****
       Ttime = Ttime + 1;
       Temps(:, Ttime) = signal(nc,nl,nb,18:22);  % Append Temps to array vs time
       measSpec = 'At BATT %1.0f meas V = %3.2f volts, I = %2.3f amps\n';
       fprintf(measSpec, nb, signal(nc,nl,nb,nb), signal(nc,nl,nb,nb+8));
     end
 %     all_loads_on_off(sbsl, 0)           % turn all loads off for safety
-    sbsl.write_ack(1, B3MB_CMD_ADDR, B3MB_ALL_LOADS_OFF);  % turn all loads off for safety
+%     sbsl.write_ack(1, B3MB_CMD_ADDR, B3MB_ALL_LOADS_OFF);  % turn all loads off for safety
+      B3MB_cmd(sbsl, B3MB_ALL_LOADS_OFF, 3); % B3MB_ALL_LOADS_OFF cmd. 3 tries. 
     pause(10)                           % let loads cool off
   end
 end
