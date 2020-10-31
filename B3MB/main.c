@@ -38,6 +38,6 @@ int main(void) {
   // loop forever, do its thing
   while (1) {
 	subbus_poll();
-    gpio_toggle_pin_level(STATUS_O);
+//    gpio_toggle_pin_level(STATUS_O);
   }
 }

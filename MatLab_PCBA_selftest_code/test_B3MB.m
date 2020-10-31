@@ -82,7 +82,7 @@ pause(0.5)
 % and test / data Collection parameters
 %
 Vin = [28.0, 50.0, 50.0, 100.0, 100.0];
-Rld = [25.0, 25.0, 15.0, 15.0,  10.0];
+Rld = [25.0, 25.0, 15.0, 15.0, 10.0];
 Icd = Vin./Rld;
 JP  = [7, 8, 9, 10]; 
 
@@ -195,12 +195,12 @@ plot(Vin, signal(:, 4, 4, 4)-Vin', '-ks') %
 
 hold off, grid on
 title('Battery Voltage vs. Actual');
+xlabel('Actual Voltage (V)'); ylabel('Measured Battery Voltage (V)');
 legend('BATT1xLOAD1', 'BATT2xLOAD1', 'BATT3xLOAD1', 'BATT4xLOAD1', ...
        'BATT1xLOAD2', 'BATT2xLOAD2', 'BATT3xLOAD2', 'BATT4xLOAD2', ...
        'BATT1xLOAD3', 'BATT2xLOAD3', 'BATT3xLOAD3', 'BATT4xLOAD3', ...
        'BATT1xLOAD4', 'BATT2xLOAD4', 'BATT3xLOAD4', 'BATT4xLOAD4', ...
        'Location','eastoutside');
-xlabel('Actual Voltage (V)'); ylabel('Measured Battery Voltage (V)');
 
 % signal(Cnd, Ld, Bat, Var)
 figure, hold on  % For all Conditions, Bus Voltage Error by Battery Vin
@@ -211,9 +211,9 @@ plot(signal(:, :, 4, 4), signal(:, :, 4, 17)-signal(:, :, 4, 4), '-ks')
 
 hold off, grid on
 title('Bus Voltage vs. Actual')
+xlabel('Battery Voltage (V)'); ylabel('Measured Bus Voltage Error (V)');
 legend('BATT1', 'BATT2', 'BATT3', 'BATT4', ...
        'Location','northwest');
-xlabel('Battery Voltage (V)'); ylabel('Measured Bus Voltage Error (V)');
 
 % signal(Cnd, Ld, Bat, Var)
 figure, hold on  % For all Conditions, Load Voltage Error by Battery Voltage
@@ -236,6 +236,7 @@ plot(signal(:, 4, 4, 4), signal(:, 4, 4, 8)-signal(:, 4, 4, 4), '-ks') %
 
 hold off, grid on
 title('Load Voltage Error vs. Battery Voltage')
+xlabel('Battery Voltage (V)'); ylabel('Measured Load Voltage Error (V)');
 legend('BATT1xLOAD1', 'BATT2xLOAD1', 'BATT3xLOAD1', 'BATT4xLOAD1', ...
        'BATT1xLOAD2', 'BATT2xLOAD2', 'BATT3xLOAD2', 'BATT4xLOAD2', ...
        'BATT1xLOAD3', 'BATT2xLOAD3', 'BATT3xLOAD3', 'BATT4xLOAD3', ...
@@ -308,12 +309,12 @@ plot(signal(:, 4, 4, 8)./Rld', signal(:, 4, 4, 16), '-ks') %
 
 hold off, grid on
 title('Load Current Measured vs. Actual');
+xlabel('Actual Current (amps)'); ylabel('Measured Current (amps)');
 legend('BATT1xLOAD1', 'BATT2xLOAD1', 'BATT3xLOAD1', 'BATT4xLOAD1', ...
        'BATT1xLOAD2', 'BATT2xLOAD2', 'BATT3xLOAD2', 'BATT4xLOAD2', ...
        'BATT1xLOAD3', 'BATT2xLOAD3', 'BATT3xLOAD3', 'BATT4xLOAD3', ...
        'BATT1xLOAD4', 'BATT2xLOAD4', 'BATT3xLOAD4', 'BATT4xLOAD4', ...
        'Location','eastoutside');
-xlabel('Actual Current (amps)'); ylabel('Measured Current (amps)');
 
 %% ********************************************************************
 % Generate Current Calibration factors 
@@ -383,12 +384,12 @@ plot(signal(:, 4, 4, 8)./Rld', sigcal(:, 4, 4, 12), '-ks')%
 
 hold off, grid on
 title('Battery Calibrated Current Measured vs. Actual');
+xlabel('Actual Current (amps)'); ylabel('Measured Current (amps)');
 legend('BATT1xLOAD1', 'BATT1xLOAD2', 'BATT1xLOAD3', 'BATT1xLOAD4', ...
        'BATT2xLOAD1', 'BATT2xLOAD2', 'BATT2xLOAD3', 'BATT2xLOAD4', ...
        'BATT3xLOAD1', 'BATT3xLOAD2', 'BATT3xLOAD3', 'BATT3xLOAD4', ...
        'BATT4xLOAD1', 'BATT4xLOAD2', 'BATT4xLOAD3', 'BATT4xLOAD4', ...
        'Location','eastoutside');
-xlabel('Actual Current (amps)'); ylabel('Measured Current (amps)');
 
 % signal(Cnd, Ld, Bat, Var)
 % sigcal(Cnd, Ld, Bat, Var)
@@ -412,12 +413,12 @@ plot(signal(:, 4, 4, 8)./Rld', sigcal(:, 4, 4, 16), '-ks')%
 
 hold off, grid on
 title('Load Calibrated Current Measured vs. Actual');
+xlabel('Actual Current (amps)'); ylabel('Measured Current (amps)');
 legend('BATT1xLOAD1', 'BATT2xLOAD1', 'BATT3xLOAD1', 'BATT4xLOAD1', ...
        'BATT1xLOAD2', 'BATT2xLOAD2', 'BATT3xLOAD2', 'BATT4xLOAD2', ...
        'BATT1xLOAD3', 'BATT2xLOAD3', 'BATT3xLOAD3', 'BATT4xLOAD3', ...
        'BATT1xLOAD4', 'BATT2xLOAD4', 'BATT3xLOAD4', 'BATT4xLOAD4', ...
        'Location','eastoutside');
-xlabel('Actual Current (amps)'); ylabel('Measured Current (amps)');
 
 %% *****************************************************************
 % Calc Reading to Noise Ratio (vs. Full Scale Signal to Noise Ratio
@@ -445,6 +446,7 @@ plot(signal(:, 4, 4, 8)./Rld', sigcal(:, 4, 4, 16)./noise(:,4,4,15), '-ks')%
 
 hold off, grid on
 title('Load Calibrated Current SNR vs. Actual S');
+xlabel('Actual Current (amps)'); ylabel('SNR');
 legend('BATT1xLOAD1', 'BATT2xLOAD1', 'BATT3xLOAD1', 'BATT4xLOAD1', ...
        'BATT1xLOAD2', 'BATT2xLOAD2', 'BATT3xLOAD2', 'BATT4xLOAD2', ...
        'BATT1xLOAD3', 'BATT2xLOAD3', 'BATT3xLOAD3', 'BATT4xLOAD3', ...
@@ -465,7 +467,7 @@ plot(Temps(5, :), '-g');
 
 hold off, grid on
 title('B3MB Temperatures');
+xlabel('Sample (~Time)'); ylabel('Vtemp (V)');
 legend('Temp1', 'Temp2', 'Temp3', 'Temp4', 'Temp5', ...
        'Location','eastoutside');
-xlabel('Sample (~Time)'); ylabel('Vtemp (V)');
 
