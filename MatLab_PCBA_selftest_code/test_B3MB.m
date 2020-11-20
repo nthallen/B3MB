@@ -23,11 +23,12 @@
 sbsl = subbusd_slcan;           % create the subbus_serial_CAN object
 sbsl.close;                     % close its serial port
 sbsl.open;                      % open its serial port
+%%
 val = sbsl.SBCAN_read_addrs(1,2); % board_ID
-if val == 14
+if val == 17
   fprintf(1, 'Good Connection! Exptd B3MB Board ID = rcvd id = %d\n', val);
 else
-  fprintf(1, 'Failed, Expected Board ID 14 for B3MB, received %d\n', val);
+  fprintf(1, 'Failed, Expected Board ID 17 for B3MB, received %d\n', val);
   while(1)
     pause(1)
   end

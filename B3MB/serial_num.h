@@ -10,41 +10,40 @@
 #ifndef SERIAL_NUM_H_INCLUDED
  #define SERIAL_NUM_H_INCLUDED
 
+  // SUBBUS_BOARD_ID: Defined in https://www.evernote.com/shard/s361/nl/56411283/4e6b7bd1-8c12-46be-b483-0bbcb3bcaeca
+  //   17 => B3MB
+  // SUBBUS_BOARD_INSTRUMENT_ID: Also defined in that document
+  //   1 => SCoPEx
+  // CAN_BOARD_ID: Should be documented in an inventory of B3MB boards
+  //   The CAN_BOARD_ID probably should map 1:1 to the SUBBUS_BOARD_LOCATION, to make programming predictable!
+
   // These parameters are common to all boards built with this code
-  #define SUBBUS_BOARD_ID			  14
+  #define SUBBUS_BOARD_ID			  17
   #define SUBBUS_BOARD_BOARD_TYPE	  "B3MB"
   #define SUBBUS_BOARD_BOARD_REV	  "Rev A"
-  #define SUBBUS_BOARD_FIRMWARE_REV	  "V1.0"
-  #define SUBBUS_BOARD_BUILD_NUM	  7
+  #define SUBBUS_BOARD_FIRMWARE_REV	  "V1.1"
+  #define SUBBUS_BOARD_BUILD_NUM	  8
 
   #if ! defined(SUBBUS_BOARD_SN)
     #error Must define SUBBUS_BOARD_SN in Build Properties
   #endif
 
-  #if SUBBUS_BOARD_SN == 1
-    #define SUBBUS_BOARD_INSTRUMENT     "TEST"
-    #define SUBBUS_BOARD_INSTRUMENT_ID  4
-  #endif
-
-  #if SUBBUS_BOARD_SN == 2                       // From IRmon serial_num.h
-    #define CAN_BOARD_ID                1
-    #define SUBBUS_BOARD_LOCATION       "Lamp A"
-  #endif
-
-  #if SUBBUS_BOARD_SN == 3
-    #define SUBBUS_BOARD_INSTRUMENT     "DPOPS"
-    #define SUBBUS_BOARD_INSTRUMENT_ID  5
-  #endif
-
   #if SUBBUS_BOARD_SN == 4
-    #define SUBBUS_BOARD_INSTRUMENT     "B3MB"       // Halogens in IRmon code
-    #define SUBBUS_BOARD_INSTRUMENT_ID  6            // 5        in IRmon code
-    #define SUBBUS_BOARD_LOCATION       "28v_Can1"   // added when adding CAN
-	#define CAN_BOARD_ID                1            // added when adding CAN
+    #define SUBBUS_BOARD_INSTRUMENT     "SCoPEx"
+    #define SUBBUS_BOARD_INSTRUMENT_ID  1
+    #define SUBBUS_BOARD_LOCATION       "Testing"
+	  #define CAN_BOARD_ID                1
+  #endif
+
+  #if SUBBUS_BOARD_SN == 5
+    #define SUBBUS_BOARD_INSTRUMENT     "SCoPEx"
+    #define SUBBUS_BOARD_INSTRUMENT_ID  1
+    #define SUBBUS_BOARD_LOCATION       "Testing"
+    #define CAN_BOARD_ID                1
   #endif
 
   #if ! defined(CAN_BOARD_ID) || ! defined(SUBBUS_BOARD_LOCATION)
-    #error Specified CAN_BOARD_ID apparently not configured in can_control.h
+    #error Specified CAN_BOARD_ID or LOCATION apparently not configured in serial_num.h
   #endif
 
   #ifdef CAN_BOARD_ID

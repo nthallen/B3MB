@@ -8,7 +8,7 @@
  *
  * An I2C interfaces servicing a total of 2 Quad Input ADS1115's
  *    batt_sb_i2c - 2 ADS1115's, single ended, (Voltage and Current) x (BATT1 - BATT4)
- */ 
+ */
 
 #include <utils.h>
 #include <hal_init.h>
@@ -20,15 +20,14 @@
 #include "subbus.h"
 
 static bool             batt_enabled       = BATT_ENABLE_DEFAULT; // is I2C hardware wired to Battery Monitors enabled?
-static volatile bool    batt_txfr_complete = true;                // is this I2C hardware busy with a transaction?                                 
+static volatile bool    batt_txfr_complete = true;                // is this I2C hardware busy with a transaction?
 static volatile bool    batt_error_seen    = false;               // was there an error during the last transaction?
 static volatile int32_t batt_error         = I2C_OK;              // if so, what is the error code?
 
 static struct io_descriptor *I2C_BATT_IO;                         // ASF4 HAL i2c_async_driver io descriptor structure
 
-/* ********************************************************************************************
+/**
  * Host Accessible Cache Address space for Battery Monitoring information
- *
  */
 static subbus_cache_word_t i2c_batt_cache[I2C_BATT_HIGH_ADDR - I2C_BATT_BASE_ADDR+1] = {
   { 0, 0, true,  false, false, false, false }, // Offset 0: R: batt_1_v    ADS1115_A_AIN_0
@@ -50,8 +49,8 @@ static void batt_record_i2c_error(enum ads_state_t ads_poll_state, int32_t i2c_e
 */
 
 /* **********************************************************************************************
- * State Machine for Reading Battery Voltages and Currents from a pair of ADS1115's 
- * Attached to Peripheral SERCOMx via ASF4's i2c_async_driver 
+ * State Machine for Reading Battery Voltages and Currents from a pair of ADS1115's
+ * Attached to Peripheral SERCOMx via ASF4's i2c_async_driver
  *    micro-controller Hardware instance   = I2C_BATT
  *    micro-controller ASF4 io descriptor  = i2c_batt_io
  *    Host cache structure                 = i2c_batt_cache
@@ -61,95 +60,112 @@ static void batt_record_i2c_error(enum ads_state_t ads_poll_state, int32_t i2c_e
  */
 
 // States
-enum batt_state_t {batt_config,     batt_ptr_cnvr_reg, 
-	               batt_wait_cnvrt, batt_read_cnvrt, 
-				   batt_cache_cnvrt};
+enum batt_state_t {batt_config,     batt_ptr_cnvr_reg,
+                   batt_wait_cnvrt, batt_read_cnvrt,
+                   batt_cache_cnvrt};
 static enum batt_state_t batt_state = batt_config;
 
 // I2C MASTER write Packets and Read buffer
 static uint8_t  batt_cnfg_reg[3] = { 0x01, 0xC7, 0x83};  // 0x01 = sets Addr_Pointer to configuration register
                                                          // 0xC7 = MSByte Config Reg, AINp = AIN0, AINn = GND
-														 //        this will cycle from 0xC9 to 0xF9 to select
-														 //        all four inputs, all single ended
-														 //        and set FSR = +/- 1.024v
-														 //        and set Mode = one-shot
-														 // 0x83 = LBYte Config Reg, sets 128 SPS and ALRT/DRDY = Hi-Z
-														 //        MSNibble sets Conversion Speed 
-														 //        0=8, 2=15, 4=32, 6=64, 8=128, A=250, C=475, E=860  
+                                                         //        this will cycle from 0xC9 to 0xF9 to select
+                                                         //        all four inputs, all single ended
+                                                         //        and set FSR = +/- 1.024v
+                                                         //        and set Mode = one-shot
+                                                         // 0x83 = LBYte Config Reg, sets 128 SPS and ALRT/DRDY = Hi-Z
+                                                         //        MSNibble sets Conversion Speed
+                                                         //        0=8, 2=15, 4=32, 6=64, 8=128, A=250, C=475, E=860
 static uint8_t  batt_conver_reg[1] = { 0x00 };           // 0x00 = ADS1115's internal address for where to read conversion data
 static uint8_t  batt_ain_cmd[4] = { 0xC7, 0xD7, 0xE7, 0xF7 }; // 2nd of 3 bytes in batt_cnfg_reg[3], choose which batt_ain_x #
 static uint8_t  batt_ads_ibuf[2];                        // buffer for read back of converted data
 
 // Two I2C Slave devices on BATT_MASTER, both ADS1115's, one at I2C device address = 0x48,the other at 0x49.
-static uint8_t  batt_dev_addr = I2C_A_DEV_ADDR;
+//static uint8_t  batt_dev_addr = I2C_A_DEV_ADDR;
 static uint8_t  batt_dev_x = 0;                          // Two ADS1115s on I2C bus, indicates which device is up to bat
 static uint8_t  batt_ain_x = 0;                          // 4 Single Ended Ana_ins on ADS1115, which a_in   is up to bat
 #define NUM_CHANNELS         4                           // total # of single ended a_in's on the ADS1115
 
 #define CONVERT_TIME 8                                   // 7.8ms / sample @ 128 Samples per Second, time in milliseconds
 static uint32_t  batt_start_time = 0;                    // timer value at start convert command issued
- 
+
+static void i2c_write(int16_t i2c_addr, const uint8_t *obuf, int16_t nbytes) {
+  assert(batt_txfr_complete, __FILE__, __LINE__);
+  batt_txfr_complete = false;
+  i2c_m_async_set_slaveaddr(&I2C_BATT, i2c_addr, I2C_M_SEVEN);
+  io_write(I2C_BATT_IO, obuf, nbytes);
+}
+
+static void i2c_read(int16_t i2c_addr, uint8_t *ibuf, int16_t nbytes) {
+  assert(batt_txfr_complete, __FILE__, __LINE__);
+  batt_txfr_complete = false;
+  i2c_m_async_set_slaveaddr(&I2C_BATT, i2c_addr, I2C_M_SEVEN);
+  io_read(I2C_BATT_IO, ibuf, nbytes);
+}
+
 void i2c_batt_poll(void) {
   if ( !batt_enabled || !batt_txfr_complete ) {          // if not enabled or transfer in process, nothing to do
-	return;
+    return;
   }
   switch (batt_state) {    // I2C enabled and no transfer in process so do current state's work, evaluate next state
-	  
+
     case batt_config:                        // Write Config Reg, selects which channel to convert and starts conversion
-      batt_txfr_complete = false;
-	  batt_dev_addr = (batt_dev_x == 0) ? I2C_A_DEV_ADDR : I2C_B_DEV_ADDR;
       batt_cnfg_reg[1] = batt_ain_cmd[batt_ain_x];   // pick the correct batt_ain_x when issuing the convert command
-      i2c_m_async_set_slaveaddr(&I2C_BATT, batt_dev_addr, I2C_M_SEVEN);
-      io_write(I2C_BATT_IO, batt_cnfg_reg, 3);  
+      i2c_write( (batt_dev_x == 0) ? I2C_A_DEV_ADDR : I2C_B_DEV_ADDR, batt_cnfg_reg, 3);
+//      batt_txfr_complete = false;
+//      batt_dev_addr = (batt_dev_x == 0) ? I2C_A_DEV_ADDR : I2C_B_DEV_ADDR;
+//      i2c_m_async_set_slaveaddr(&I2C_BATT, batt_dev_addr, I2C_M_SEVEN);
+//      io_write(I2C_BATT_IO, batt_cnfg_reg, 3);
       if (batt_dev_x == 0) {
         batt_dev_x = 1;
         batt_state = batt_config;                    // only one set to correct channel, set 2nd
-	  } else {
-	    batt_dev_x = 0;
+      } else {
+        batt_dev_x = 0;
         batt_state = batt_ptr_cnvr_reg;              // both chips set to correct channel, update Addr_Pointer
-	  }
-    break;
-	  
-    case batt_ptr_cnvr_reg:                  // Set Addr_Pointer to point to conversion data register
-      batt_txfr_complete = false;
-      batt_dev_addr = (batt_dev_x == 0) ? I2C_A_DEV_ADDR : I2C_B_DEV_ADDR;
-      i2c_m_async_set_slaveaddr(&I2C_BATT, batt_dev_addr, I2C_M_SEVEN);
-      io_write(I2C_BATT_IO, batt_conver_reg, 1);
-      if (batt_dev_x == 0) {
-	    batt_dev_x = 1;
-	    batt_state = batt_ptr_cnvr_reg;              // only one points to conversion register, point 2nd
-	  } else {
-	    batt_dev_x = 0;
-	    batt_start_time = count_1msec;
-	    batt_state = batt_wait_cnvrt;                // both chips points to conversion register, wait for conversion
       }
-    break;
-	  
-	case batt_wait_cnvrt:                    // Wait for conversion to complete
-	  batt_state = ( (count_1msec - batt_start_time) > CONVERT_TIME ) ? batt_read_cnvrt : batt_wait_cnvrt;
-    break;
-	  
+      break;
+
+    case batt_ptr_cnvr_reg:                  // Set Addr_Pointer to point to conversion data register
+//    batt_txfr_complete = false;
+//    batt_dev_addr = (batt_dev_x == 0) ? I2C_A_DEV_ADDR : I2C_B_DEV_ADDR;
+//    i2c_m_async_set_slaveaddr(&I2C_BATT, batt_dev_addr, I2C_M_SEVEN);
+//    io_write(I2C_BATT_IO, batt_conver_reg, 1);
+      i2c_write((batt_dev_x == 0) ? I2C_A_DEV_ADDR : I2C_B_DEV_ADDR, batt_conver_reg, 1);
+      if (batt_dev_x == 0) {
+        batt_dev_x = 1;
+        batt_state = batt_ptr_cnvr_reg;              // only one points to conversion register, point 2nd
+      } else {
+        batt_dev_x = 0;
+        batt_start_time = count_1msec;
+        batt_state = batt_wait_cnvrt;                // both chips points to conversion register, wait for conversion
+      }
+      break;
+
+    case batt_wait_cnvrt:                    // Wait for conversion to complete
+      batt_state = ( (count_1msec - batt_start_time) > CONVERT_TIME ) ? batt_read_cnvrt : batt_wait_cnvrt;
+      break;
+
     case batt_read_cnvrt:                    // Read converted data
-      batt_txfr_complete = false;
-      batt_dev_addr = (batt_dev_x == 0) ? I2C_A_DEV_ADDR : I2C_B_DEV_ADDR;
-      i2c_m_async_set_slaveaddr(&I2C_BATT, batt_dev_addr, I2C_M_SEVEN);
-      io_read(I2C_BATT_IO, batt_ads_ibuf, 2);
-	  batt_state = batt_cache_cnvrt;
-    break;
-	  
+//    batt_txfr_complete = false;
+//    batt_dev_addr = (batt_dev_x == 0) ? I2C_A_DEV_ADDR : I2C_B_DEV_ADDR;
+//    i2c_m_async_set_slaveaddr(&I2C_BATT, batt_dev_addr, I2C_M_SEVEN);
+//    io_read(I2C_BATT_IO, batt_ads_ibuf, 2);
+      i2c_read((batt_dev_x == 0) ? I2C_A_DEV_ADDR : I2C_B_DEV_ADDR, batt_ads_ibuf, 2);
+      batt_state = batt_cache_cnvrt;
+      break;
+
     case batt_cache_cnvrt:                   // Check read contents: MSByte's MSBit = status of conversion
       if (batt_dev_x == 0) {
-		i2c_batt_cache[batt_ain_x].cache = (batt_ads_ibuf[0] << 8) | batt_ads_ibuf[1];
-	    batt_dev_x = 1;
-	    batt_state = batt_read_cnvrt;                // only one read from, get 2nd
-	  } else {
-		i2c_batt_cache[batt_ain_x + NUM_CHANNELS].cache = (batt_ads_ibuf[0] << 8) | batt_ads_ibuf[1];
-	    batt_dev_x = 0;
-		batt_ain_x = (batt_ain_x+1) % NUM_CHANNELS;  // Valid channels are 0, 1, 2, and 3, NUM_CHANNELS = 4
-	    batt_state = batt_config;                    // both chips cached, bump channel select and go select it
+        sb_cache_update(i2c_batt_cache, batt_ain_x, (batt_ads_ibuf[0] << 8) | batt_ads_ibuf[1]);
+        batt_dev_x = 1;
+        batt_state = batt_read_cnvrt;                // only one read from, get 2nd
+      } else {
+        sb_cache_update(i2c_batt_cache, batt_ain_x + NUM_CHANNELS, (batt_ads_ibuf[0] << 8) | batt_ads_ibuf[1]);
+        batt_dev_x = 0;
+        batt_ain_x = (batt_ain_x+1) % NUM_CHANNELS;  // Valid channels are 0, 1, 2, and 3, NUM_CHANNELS = 4
+        batt_state = batt_config;                    // both chips cached, bump channel select and go select it
       }
-    break;
-	  
+      break;
+
     default:
       assert(false, __FILE__, __LINE__);
   }
