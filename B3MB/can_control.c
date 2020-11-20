@@ -7,7 +7,7 @@ bool can_rx_completed = false;
 
 typedef struct {
   uint8_t buf[CAN_MAX_TXFR];
-  int nc;            //* Number of bytes in the buffer.  Must be <= len and 
+  int nc;            //* Number of bytes in the buffer.  Must be <= len and
                      //      must be equal to len before processing begins
   int cp;            //* The number of bytes that have been processed
   uint16_t id;       //* The CAN ID of the message
@@ -461,6 +461,7 @@ subbus_driver_t sb_can = {
   false
 };
 
+#if USE_CAN_DESC
 extern subbus_driver_t sb_can_desc;
 
 static subbus_cache_word_t can_desc_cache[2] = {
@@ -501,3 +502,4 @@ subbus_driver_t sb_can_desc = {
   can_desc_action,               // driver action method
   false                          // initialized state
 };
+#endif

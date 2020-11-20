@@ -49,6 +49,8 @@ extern bool can_tx_completed;
 int32_t can_control_read(struct can_message *msg);
 int32_t can_control_write(uint16_t ID, uint8_t *data, int nb);
 extern subbus_driver_t sb_can;
+#ifdef USE_CAN_DESC
 extern subbus_driver_t sb_can_desc;
+#endif
 
 #endif

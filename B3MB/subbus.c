@@ -8,7 +8,7 @@
  *      Action (do "now" when host reads or writes to or from driver's caches).
  *
  * The poll function utilizes an addressable "cached" memory whose address
- * space is defined within the driver structure by address_low and address_high 
+ * space is defined within the driver structure by address_low and address_high
  * members.
  *
  * The main function's while(1) loop acts as a state clock, during each
@@ -18,13 +18,13 @@
  *
  * Any state in any driver's poll_state_machines should not require more than
  * ~ 20uSec to execute (add more states, use non-blocking async hardware resources).
- * This helps to "guarantee" "real-time" responsiveness (no latency anywhere 
- * in excess of ~ 200usec = 20us max state duration * 10(SUBBUS_MAX_DRIVERS)   
+ * This helps to "guarantee" "real-time" responsiveness (no latency anywhere
+ * in excess of ~ 200usec = 20us max state duration * 10(SUBBUS_MAX_DRIVERS)
  *
- * The driver's cache is an "intelligent memory" structure used as 
+ * The driver's cache is an "intelligent memory" structure used as
  * coherent, bi-directional, shared memory between the drive (local embedded code)
- * and the instrument's host.  
- * 
+ * and the instrument's host.
+ *
  * Communications between the two may occur on any of many possible physical
  * layers (i.e. RS282, RS485, USB, CAN, MODBUS, other).
  *
@@ -37,7 +37,7 @@
  * There exists a series of cache functions that can be exploited by the driver
  * to read from or write to the cache and maintain coherency between Host and driver
  * some are described in this heading here:
- * 
+ *
  *  int subbus_read(uint16_t addr, uint16_t *rv)  --- Host reads value from cache
  *           returns (via pointer rv) value hardware at cache addr,
  *           marks was read as true
@@ -51,7 +51,7 @@
  *           marks was written as true
  *           if driver needs to act immediately (dynamic = true) invokes
  *              driver's dynamic method then and there.
- *           updates location pointed at by *rv with host written value 
+ *           updates location pointed at by *rv with host written value
  */
 #include <string.h>
 #include "pin_defines.h"  // for sb_on_off only
@@ -62,7 +62,7 @@ static int n_drivers = 0;
 
 /* *******************************************************************************
  * Add Subbus drivers, @return true on error.
- *		Possible errors include too many drivers or drivers address space 
+ *		Possible errors include too many drivers or drivers address space
  *		not in ascending order.
  */
 bool subbus_add_driver(subbus_driver_t *driver) {
@@ -94,7 +94,7 @@ void subbus_poll(void) {
 }
 
 /* *********************************************************************
- * Host side Read from cache, 
+ * Host side Read from cache,
  * invoked via physical layer's control module detecting a read request
  * for any driver, any new data / commands
  *		@return non-zero on success (acknowledge)
@@ -120,7 +120,7 @@ int subbus_read(uint16_t addr, uint16_t *rv) {
 }
 
 /* ***********************************************************************
- * Host side Write into cache, 
+ * Host side Write into cache,
  * invoked via physical layer's control module detecting a write request
  * for any driver, any new data / commands
  *		@return non-zero on success (acknowledge)
@@ -164,9 +164,9 @@ static subbus_cache_word_t sb_base_cache[SUBBUS_INSTID_ADDR+1] = {
   { SUBBUS_BOARD_INSTRUMENT_ID, 0, 1, 0, 0, 0, 0 }  // Instrument ID          (SUBBUS_INSTID_ADDR)
 };
 
-subbus_driver_t sb_base = { 
-	0, SUBBUS_INSTID_ADDR, 
-	sb_base_cache, 
+subbus_driver_t sb_base = {
+	0, SUBBUS_INSTID_ADDR,
+	sb_base_cache,
 	0,                  // no reset  function
 	0,					// no poll   function
 	0,					// no action function
@@ -194,38 +194,32 @@ bool subbus_cache_iswritten(subbus_driver_t *drv, uint16_t addr, uint16_t *value
   return false;
 }
 
-/* ********************************************************************
- * This function differs from subbus_write() in that it directly
- * updates the cache value. subbus_write() is specifically for
- * writes originating from the control port. 
- * 
- * subbus_cache_update() is used by internal functions for storing data 
- * acquired from peripherals, or for storing values written from the control
- * port after verifying them.
- *
- * @param drv The driver structure
- * @param addr The cache address
- * @param data The value to be written
- * @return true on success
- */
 bool subbus_cache_update(subbus_driver_t *drv, uint16_t addr, uint16_t data) {
   if (addr >= drv->low && addr <= drv->high) {
-    subbus_cache_word_t *word = &drv->cache[addr-drv->low];
-    if (word->readable) {
-      word->cache = data;
-      word->was_read = false;
-      return true;
-    }
+    return sb_cache_update(drv->cache, addr-drv->low, data);
+  }
+  return false;
+}
+
+bool sb_cache_update(subbus_cache_word_t *cache, uint16_t offset, uint16_t data) {
+  subbus_cache_word_t *word = &cache[offset];
+  if (word->readable) {
+    word->cache = data;
+    word->was_read = false;
+    return true;
   }
   return false;
 }
 
 bool subbus_cache_was_read(subbus_driver_t *drv, uint16_t addr) {
   if (addr >= drv->low && addr <= drv->high) {
-    subbus_cache_word_t *word = &drv->cache[addr-drv->low];
-    return word->was_read;
+    return sb_cache_was_read(drv->cache, addr-drv->low);
   }
   return false;
+}
+
+bool sb_cache_was_read(subbus_cache_word_t *cache, uint16_t offset) {
+  return cache[offset].was_read;
 }
 
 // *******************************************************************
@@ -270,5 +264,5 @@ subbus_driver_t sb_board_desc = {
   board_desc_init,          // reset function
   0,						// no polling function
   board_desc_action,        // action function
-  false 
+  false
 };
