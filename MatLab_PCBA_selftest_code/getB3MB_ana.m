@@ -1,9 +1,11 @@
 function [val2] = getB3MB_ana(canobj, vars, samps, dly)
 %% ***************************************************************
-% Retrieve 'samps' samples of first 'vars' B3MB Analog readings. 
-% with 'dly' delay between samples. 
+% Retrieve 'samps' samples of first 'vars' B3MB Analog readings, 
+%  with 'dly' delay between samples. 
 % try - catch protected version; will try for 1.5 sec (3 tries)
-% instead of passing # of tries. 
+%  instead of passing # of tries. 
+% Temperature readings: Assumes thermistor R vs T table 
+%  is loaded into t30k global variable
 %
 
 if vars > 23 
@@ -39,7 +41,7 @@ for ii = 1:samps
 end
 
 %% ***************************************************************
-% Convert to meaningfull units based on hardware configuration
+% Convert to meaningful units based on hardware configuration
 %
 VFS = 1.024;      % Full Scale Voltage, +/-
 LSB = VFS/2^15;   % LSB value(only 15 bits because of Single Ended config
@@ -48,9 +50,14 @@ Rdv = 2e3;        % Bottom R in Vmonitor R divider
 Rsh = 1.5e-3;     % Current Sensing Shunt Resistance
 Ign = 20;         % Gain on Ish*Rsh internal to LTC7000 Chip
 ILS = LSB/(Ign*Rsh); % Current LSB
-% Vref = 2.500;     % Thermistor Reference Voltage
-VTfs = 4.096;     % Termistor channel Full Scale Voltage +/-
+Vth = zeros(5, samps);  % Thermistor Voltages
+Rth = zeros(samps);     % Thermistor Resistance
+VTfs = 4.096;     % Termistor channel Full Scale Input Voltage +/-
 VTLSB = VTfs/2^15; % Thermistor channel LSB
+Vref = 2.500;     % Thermistor Reference Voltage
+Rpu = 75e3;       % Thermistor Pullup resistance
+global Rtherm;    % Thermistor standard R 
+global Ttherm;    % Thermistor standard T 
 
 % Re-order and convert units
 val2( 1: 4,:) = val( 1:2: 7,:)*LSB*(Rbt+Rdv)/Rdv;   % in volts at Vbatt(x)
@@ -59,7 +66,14 @@ val2( 9:12,:) = val( 2:2: 8,:)*ILS;                 % in amps  at Ibatt(x)
 val2(13:16,:) = val(10:2:16,:)*ILS;                 % in amps  at Iload(x)
 % Adding third i2c bus
 val2(17, :) = val(17, :)*VTLSB*(Rbt+Rdv)/Rdv;       % in volts at Vbus
-val2(18:22, :) = val(18:22, :)*VTLSB;   % in volts at Thermistor channels
+
+for therm = 1:5     % for Temperatures in deg C
+  Vth(therm, :) = val(therm+17, :)*VTLSB;   % in volts at Thermistor channels
+  Rth(:) = (Vth(therm, :)/(Vref-Vth(therm, :))) * Rpu; % Therm Res
+  val2(therm+17, :) = interp1(Rtherm, Ttherm, Rth(:)); % Temp in C
+end
+
+% val2(18:22, :) = val(18:22, :)*VTLSB;   % in volts at Thermistor channels
 val2(23, :) = val(23, :);
 
 pause(0.01)

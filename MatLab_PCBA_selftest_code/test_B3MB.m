@@ -17,7 +17,7 @@
 %     end
 %   end
 
-%% ****************************************************************
+%% ***********************************a*****************************
 % Estabish CAN connection to B3MB PCBA
 %
 sbsl = subbusd_slcan;           % create the subbus_serial_CAN object
@@ -101,6 +101,11 @@ signal    = zeros(NUM_CONDS, NUM_LOADS, NUM_BATTS, NUM_VARS);
 noise     = signal;
 Temps = zeros(NUM_TEMPS, NUM_CONDS * NUM_LOADS * NUM_BATTS); 
 Ttime = 0;
+thermRT = load('T30K.DAT');  % prepare global Therm R vs T table for Temp readings 
+global Rtherm;
+Rtherm = thermRT(:,2); % Thermistor resistance from the table
+global Ttherm;
+Ttherm = thermRT(:,1); % Temperature in Celcius from the table
 
 %% **********************************************************
 % Do the test here
