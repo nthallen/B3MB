@@ -24,6 +24,8 @@ for ii = 1:samps
   while(attempt < tries)
     try
       val(:,ii) = canobj.SBCAN_read_inc(1, vars, B3MB_MON_ADDR);
+      Vval = val(:,ii) >= 32768;
+      val(Vval,ii) = val(Vval,ii) - 65536;
       break
     catch MExc
       disp(MExc);
@@ -43,13 +45,14 @@ end
 %% ***************************************************************
 % Convert to meaningful units based on hardware configuration
 %
-VFS = 1.024;      % Full Scale Voltage, +/-
+VFS = 2.048;      % Full Scale Voltage, +/-
 LSB = VFS/2^15;   % LSB value(only 15 bits because of Single Ended config
 Rbt = 200e3;      % Top R    in Vmonitor R divider
 Rdv = 2e3;        % Bottom R in Vmonitor R divider
 Rsh = 1.5e-3;     % Current Sensing Shunt Resistance
 Ign = 20;         % Gain on Ish*Rsh internal to LTC7000 Chip
 ILS = LSB/(Ign*Rsh); % Current LSB
+
 Vth = zeros(5, samps);  % Thermistor Voltages
 Rth = zeros(samps);     % Thermistor Resistance
 VTfs = 4.096;     % Termistor channel Full Scale Input Voltage +/-
@@ -58,6 +61,12 @@ Vref = 2.500;     % Thermistor Reference Voltage
 Rpu = 75e3;       % Thermistor Pullup resistance
 global Rtherm;    % Thermistor standard R 
 global Ttherm;    % Thermistor standard T 
+
+if isempty(Rtherm)
+  thermRT = load('T30K.DAT');  % prepare global Therm R vs T table for Temp readings 
+  Rtherm = thermRT(:,2); % Thermistor resistance from the table
+  Ttherm = thermRT(:,1); % Temperature in Celcius from the table
+end
 
 % Re-order and convert units
 val2( 1: 4,:) = val( 1:2: 7,:)*LSB*(Rbt+Rdv)/Rdv;   % in volts at Vbatt(x)
@@ -69,8 +78,8 @@ val2(17, :) = val(17, :)*VTLSB*(Rbt+Rdv)/Rdv;       % in volts at Vbus
 
 for therm = 1:5     % for Temperatures in deg C
   Vth(therm, :) = val(therm+17, :)*VTLSB;   % in volts at Thermistor channels
-  Rth(:) = (Vth(therm, :)/(Vref-Vth(therm, :))) * Rpu; % Therm Res
-  val2(therm+17, :) = interp1(Rtherm, Ttherm, Rth(:)); % Temp in C
+  Rth = (Vth(therm, :)/(Vref-Vth(therm, :))) * Rpu; % Therm Res
+  val2(therm+17, :) = interp1(Rtherm, Ttherm, Rth); % Temp in C
 end
 
 % val2(18:22, :) = val(18:22, :)*VTLSB;   % in volts at Thermistor channels

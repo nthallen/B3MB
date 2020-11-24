@@ -472,7 +472,7 @@ plot(Temps(5, :), '-g');
 
 hold off, grid on
 title('B3MB Temperatures');
-xlabel('Sample (~Time)'); ylabel('Vtemp (V)');
+xlabel('Sample (~Time)'); ylabel('Vtemp (°C)');
 legend('Temp1', 'Temp2', 'Temp3', 'Temp4', 'Temp5', ...
        'Location','eastoutside');
 

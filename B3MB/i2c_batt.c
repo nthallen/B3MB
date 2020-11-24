@@ -67,17 +67,17 @@ enum batt_state_t {batt_config,     batt_ptr_cnvr_reg,
 static enum batt_state_t batt_state = batt_config;
 
 // I2C MASTER write Packets and Read buffer
-static uint8_t  batt_cnfg_reg[3] = { 0x01, 0xC7, 0x83};  // 0x01 = sets Addr_Pointer to configuration register
-                                                         // 0xC7 = MSByte Config Reg, AINp = AIN0, AINn = GND
+static uint8_t  batt_cnfg_reg[3] = { 0x01, 0xC5, 0x83};  // 0x01 = sets Addr_Pointer to configuration register
+                                                         // 0xC5 = MSByte Config Reg, AINp = AIN0, AINn = GND
 														 //        this will cycle from 0xC9 to 0xF9 to select
 														 //        all four inputs, all single ended
-														 //        and set FSR = +/- 1.024v
+														 //        and set FSR = +/- 2.048v
 														 //        and set Mode = one-shot
 														 // 0x83 = LBYte Config Reg, sets 128 SPS and ALRT/DRDY = Hi-Z
 														 //        MSNibble sets Conversion Speed 
 														 //        0=8, 2=15, 4=32, 6=64, 8=128, A=250, C=475, E=860  
 static uint8_t  batt_conver_reg[1] = { 0x00 };           // 0x00 = ADS1115's internal address for where to read conversion data
-static uint8_t  batt_ain_cmd[4] = { 0xC7, 0xD7, 0xE7, 0xF7 }; // 2nd of 3 bytes in batt_cnfg_reg[3], choose which batt_ain_x #
+static uint8_t  batt_ain_cmd[4] = { 0xC5, 0xD5, 0xE5, 0xF5 }; // 2nd of 3 bytes in batt_cnfg_reg[3], choose which batt_ain_x #
 static uint8_t  batt_ads_ibuf[2];                        // buffer for read back of converted data
 
 // Two I2C Slave devices on BATT_MASTER, both ADS1115's, one at I2C device address = 0x48,the other at 0x49.
