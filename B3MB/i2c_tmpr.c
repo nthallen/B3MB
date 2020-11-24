@@ -1,17 +1,17 @@
 /* ********************************************************************************************
  * i2c_tmpr.c
- * 
+ *
  * An I2C interfaces servicing 3 Dual Differential Input ADS1115's = 6 Channels:
- * 	Bus Voltage, 5 Internal Thermistor Temperatures
+ *  Bus Voltage, 5 Internal Thermistor Temperatures
  *  tmpr_sb_i2c - subbus driver
- * 
+ *
  * Rev_00: Marco Rivero 9:40 AM 10/11/2020
  * 	Derived from i2c_batt.c: Replaced "batt" with "tmpr"
  * Rev_01: Marco Rivero 4:57 PM 10/14/2020
  * 	Modified for B3MB
  *  Updated State Machine
- * 
- */ 
+ *
+ */
 
 #include <utils.h>
 #include <hal_init.h>
@@ -53,13 +53,13 @@ static void tmpr_record_i2c_error(enum ads_state_t ads_poll_state, int32_t i2c_e
 */
 
 /* **********************************************************************************************
- * State Machine for Reading Battery Voltages and Currents from a chain of ADS1115's 
- * Attached to Peripheral SERCOMx via ASF4's i2c_async_driver 
+ * State Machine for Reading Battery Voltages and Currents from a chain of ADS1115's
+ * Attached to Peripheral SERCOMx via ASF4's i2c_async_driver
  *    micro-controller Hardware instance   = I2C_TMPR
  *    micro-controller ASF4 io descriptor  = I2C_TMPR_IO
  *    Host cache structure                 = i2c_tmpr_cache
  *
- * Each ADS1115 configured according to tmpr_cfg_cmd[]. 
+ * Each ADS1115 configured according to tmpr_cfg_cmd[].
  * Number of channels and Devices on i2c chain (slaves) is configured in I2C_ADS1115.h
  *
  */
@@ -102,18 +102,18 @@ static uint8_t tmpr_rd_prep[1] = { 0x00 };  // 0x00 = ADS1115's internal address
 static uint8_t tmpr_ibuf[2];                // buffer for read back of converted data
 static uint16_t ads_n_reads;				// No_reads before conversion complete
 
-static uint8_t tmpr_slave_addr[I2C_TMPR_DEVICES] = { 
+static uint8_t tmpr_slave_addr[I2C_TMPR_DEVICES] = {
    I2C_A_DEV_ADDR  // 7-bit ADS1115 I2C device address: ADDR = GND
   ,I2C_B_DEV_ADDR  // 7-bit ADS1115 I2C device address: ADDR = VDD
   ,I2C_C_DEV_ADDR  // 7-bit ADS1115 I2C device address: ADDR = SDA
 //  ,I2C_D_DEV_ADDR  // 7-bit ADS1115 I2C device address: ADDR = SCL
-}; 
+};
 static int tmpr_slave_index = 0 ;			// Tracks active device on I2C bus
 static int tmpr_channel_index = 0 ;			// Tracks active channel/cmd on I2C bus
 
 static void i2c_tmpr_poll(void) {
   if ( !tmpr_enabled || !tmpr_txfr_complete ) {  // if not enabled or transfer in process, nothing to do
-	return;
+    return;
   }
   switch (tmpr_state) {
     case tmpr_init: // Start to convert 1st signal
@@ -122,13 +122,13 @@ static void i2c_tmpr_poll(void) {
       tmpr_state = tmpr_init_tx;
       return;
     case tmpr_init_tx: // Release bus after starting write
-	  if (tmpr_slave_index < (I2C_TMPR_DEVICES - 1) ) {
-		  ++tmpr_slave_index;
-		  tmpr_state = tmpr_init;
-	  } else {
-		  tmpr_slave_index = 0;
-		  tmpr_state = tmpr_read_cfg;
-	  }
+      if (tmpr_slave_index < (I2C_TMPR_DEVICES - 1) ) {
+          ++tmpr_slave_index;
+          tmpr_state = tmpr_init;
+      } else {
+          tmpr_slave_index = 0;
+          tmpr_state = tmpr_read_cfg;
+      }
       return;
     case tmpr_read_cfg: // Start read from config register
       i2c_read(tmpr_slave_addr[tmpr_slave_index], tmpr_ibuf, 2);
@@ -151,17 +151,19 @@ static void i2c_tmpr_poll(void) {
       tmpr_state = tmpr_read_adc_tx;
       return;
     case tmpr_read_adc_tx: // Save converted value to cache
-	  i2c_tmpr_cache[tmpr_slave_index * (I2C_TMPR_DEVICES - 1) + tmpr_channel_index].cache = (tmpr_ibuf[0] << 8) | tmpr_ibuf[1];
-	  i2c_tmpr_cache[I2C_TMPR_CHANNELS].cache = ads_n_reads; // Save n_reads to cache
+      // i2c_tmpr_cache[tmpr_slave_index * (I2C_TMPR_DEVICES - 1) + tmpr_channel_index].cache = (tmpr_ibuf[0] << 8) | tmpr_ibuf[1];
+      sb_cache_update(i2c_tmpr_cache, tmpr_slave_index * (I2C_TMPR_DEVICES - 1) + tmpr_channel_index, (tmpr_ibuf[0] << 8) | tmpr_ibuf[1]);
+      // i2c_tmpr_cache[I2C_TMPR_CHANNELS].cache = ads_n_reads; // Save n_reads to cache
+      sb_cache_update(i2c_tmpr_cache, I2C_TMPR_CHANNELS, ads_n_reads);
 
-	  if (tmpr_slave_index < (I2C_TMPR_DEVICES - 1) ) {
-		  ++tmpr_slave_index;
-		  tmpr_state = tmpr_read_cfg;
-	  } else {
-		  tmpr_slave_index = 0;
-		  tmpr_channel_index = ((++tmpr_channel_index >= I2C_TMPR_INPUTS) ? 0 : tmpr_channel_index);
-		  tmpr_state = tmpr_init;
-	  }
+      if (tmpr_slave_index < (I2C_TMPR_DEVICES - 1) ) {
+          ++tmpr_slave_index;
+          tmpr_state = tmpr_read_cfg;
+      } else {
+          tmpr_slave_index = 0;
+          tmpr_channel_index = ((++tmpr_channel_index >= I2C_TMPR_INPUTS) ? 0 : tmpr_channel_index);
+          tmpr_state = tmpr_init;
+      }
       return;
     default:
       assert(false, __FILE__, __LINE__);
