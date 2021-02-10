@@ -21,25 +21,46 @@
   #define SUBBUS_BOARD_ID			  17
   #define SUBBUS_BOARD_BOARD_TYPE	  "B3MB"
   #define SUBBUS_BOARD_BOARD_REV	  "Rev A"
-  #define SUBBUS_BOARD_FIRMWARE_REV	  "V1.1"
-  #define SUBBUS_BOARD_BUILD_NUM	  8
+  #define SUBBUS_BOARD_FIRMWARE_REV	  "V1.2"
+  #define SUBBUS_BOARD_BUILD_NUM	  9
 
   #if ! defined(SUBBUS_BOARD_SN)
     #error Must define SUBBUS_BOARD_SN in Build Properties
   #endif
 
+  #if SUBBUS_BOARD_SN == 1
+    #define SUBBUS_BOARD_INSTRUMENT     "SCoPEx"
+    #define SUBBUS_BOARD_INSTRUMENT_ID  1
+    #define SUBBUS_BOARD_LOCATION       "100V3"
+	#define CAN_BOARD_ID                8
+  #endif
+
+  #if SUBBUS_BOARD_SN == 2
+    #define SUBBUS_BOARD_INSTRUMENT     "SCoPEx"
+    #define SUBBUS_BOARD_INSTRUMENT_ID  1
+    #define SUBBUS_BOARD_LOCATION       "28V1"
+	#define CAN_BOARD_ID                2
+  #endif
+
+  #if SUBBUS_BOARD_SN == 3
+    #define SUBBUS_BOARD_INSTRUMENT     "SCoPEx"
+    #define SUBBUS_BOARD_INSTRUMENT_ID  1
+    #define SUBBUS_BOARD_LOCATION       "28V2"
+	#define CAN_BOARD_ID                3
+  #endif
+
   #if SUBBUS_BOARD_SN == 4
     #define SUBBUS_BOARD_INSTRUMENT     "SCoPEx"
     #define SUBBUS_BOARD_INSTRUMENT_ID  1
-    #define SUBBUS_BOARD_LOCATION       "Testing"
-	  #define CAN_BOARD_ID                1
+    #define SUBBUS_BOARD_LOCATION       "100V1"
+	#define CAN_BOARD_ID                6
   #endif
 
   #if SUBBUS_BOARD_SN == 5
     #define SUBBUS_BOARD_INSTRUMENT     "SCoPEx"
     #define SUBBUS_BOARD_INSTRUMENT_ID  1
-    #define SUBBUS_BOARD_LOCATION       "Testing"
-    #define CAN_BOARD_ID                1
+    #define SUBBUS_BOARD_LOCATION       "100V2"
+    #define CAN_BOARD_ID                7
   #endif
 
   #if ! defined(CAN_BOARD_ID) || ! defined(SUBBUS_BOARD_LOCATION)
