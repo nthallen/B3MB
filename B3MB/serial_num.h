@@ -39,7 +39,8 @@
     #define SUBBUS_BOARD_INSTRUMENT     "SCoPEx"
     #define SUBBUS_BOARD_INSTRUMENT_ID  1
     #define SUBBUS_BOARD_LOCATION       "28V1"
-	#define CAN_BOARD_ID                2
+  	#define CAN_BOARD_ID                2
+    #define STARTUP_COMMANDS            1,15
   #endif
 
   #if SUBBUS_BOARD_SN == 3
@@ -61,6 +62,10 @@
     #define SUBBUS_BOARD_INSTRUMENT_ID  1
     #define SUBBUS_BOARD_LOCATION       "100V2"
     #define CAN_BOARD_ID                7
+  #endif
+
+  #ifndef STARTUP_COMMANDS
+    #define STARTUP_COMMANDS
   #endif
 
   #if ! defined(CAN_BOARD_ID) || ! defined(SUBBUS_BOARD_LOCATION)

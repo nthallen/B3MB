@@ -1,15 +1,16 @@
 /* ********************************************************************************************
  * commands.c
- * 
+ *
  * Command Interface for 8 switches and 8 Alert/Status bits
- * 
+ *
  * Rev_00: Marco Rivero 4:55 PM 10/15/2020
- * 	Derived from WI-ICOS-MAINS/commands.c 
- * 
- */ 
+ * 	Derived from WI-ICOS-MAINS/commands.c
+ *
+ */
 #include "pins_perphs_init.h"
 #include "commands.h"
 #include "subbus.h"
+#include "Timer_Setup.h"
 
 static void update_status(uint16_t *status, uint8_t pin, uint16_t bit) {
   if (gpio_get_pin_level(pin)) {
@@ -24,11 +25,27 @@ static subbus_cache_word_t cmd_cache[CMD_HIGH_ADDR-CMD_BASE_ADDR+1] = {
   { 0, 0, true, false, false, false, false }  // Offset 1: R: LED/Misc IO Status
 };
 
+static int startup_commands[] = { STARTUP_COMMANDS };
+static int n_startup_commands_executed = 0;
+static uint32_t startup_sequence_time = 0;
+
 // * CMD_BASE_ADDR 0x40
 static void cmd_poll(void) {
   uint16_t cmd;
+  bool have_cmd = false;
   uint16_t status = cmd_cache[0].cache;
-  if (subbus_cache_iswritten(&sb_cmd, CMD_BASE_ADDR, &cmd)) {
+  if (startup_sequence_time == 0) {
+    startup_sequence_time = count_1msec + 1000;
+  }
+  if ((n_startup_commands_executed < sizeof(startup_commands)/sizeof(int)) &&
+       (count_1msec >= startup_sequence_time)) {
+    cmd = startup_commands[n_startup_commands_executed++];
+    startup_sequence_time = count_1msec + 1000;
+    have_cmd = true;
+  } else if (subbus_cache_iswritten(&sb_cmd, CMD_BASE_ADDR, &cmd)) {
+    have_cmd = true;
+  }
+  if (have_cmd) {
     switch (cmd) {
       case 0:  gpio_set_pin_level(BATT1_ON, false); break;	// Batt 1 OFF
       case 1:  gpio_set_pin_level(BATT1_ON, true); break;	// Batt 1 ON
@@ -98,7 +115,7 @@ static void cmd_poll(void) {
   update_status(&status, LOAD3_FLT, 0x4000);
   update_status(&status, LOAD4_FLT, 0x8000);
   subbus_cache_update(&sb_cmd, CMD_BASE_ADDR, status);
-// Turn LEDs on according to status  
+// Turn LEDs on according to status
   gpio_set_pin_level(STATUS_O, (status & 0x00FF ));
   gpio_set_pin_level(FAULT_O, (~status & 0xFF00 ));
 
