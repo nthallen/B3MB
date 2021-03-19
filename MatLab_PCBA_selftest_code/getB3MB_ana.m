@@ -1,4 +1,4 @@
-function [val2] = getB3MB_ana(canobj, vars, samps, dly)
+function [val2] = getB3MB_ana(canobj, canid, vars, samps, dly)
 %% ***************************************************************
 % Retrieve 'samps' samples of first 'vars' B3MB Analog readings, 
 %  with 'dly' delay between samples. 
@@ -6,7 +6,8 @@ function [val2] = getB3MB_ana(canobj, vars, samps, dly)
 %  instead of passing # of tries. 
 % Temperature readings: Assumes thermistor R vs T table 
 %  is loaded into t30k global variable
-%
+% canobj = CAN device ID
+% canid = CAN ID (CAN address)
 
 if vars > 23 
     fprintf('\n ERROR : Number of Variables exceeds Maximum \n\n');
@@ -23,19 +24,19 @@ val = zeros(vars, samps);
 for ii = 1:samps
   while(attempt < tries)
     try
-      val(:,ii) = canobj.SBCAN_read_inc(1, vars, B3MB_MON_ADDR);
+      val(:,ii) = canobj.SBCAN_read_inc(canid, vars, B3MB_MON_ADDR);
       Vval = val(:,ii) >= 32768;
       val(Vval,ii) = val(Vval,ii) - 65536;
       break
     catch MExc
-      disp(MExc);
+      disp(MExc.message);
     end
     attempt = attempt + 1;
     warning('Re-trying sample %u',ii);
     pause(0.5)
   end
   if attempt == tries 
-    B3MB_cmd(1, B3MB_CMD_ADDR, B3MB_ALL_LOADS_OFF, 3); % B3MB_ALL_LOADS_OFF cmd. 3 tries. 
+    B3MB_cmd(canid, B3MB_CMD_ADDR, B3MB_ALL_LOADS_OFF, 3); % B3MB_ALL_LOADS_OFF cmd. 3 tries. 
     error('Read Error: Exceeded 3 tries. Make sure ALL LOADS are OFF!')
     return % Should never get here
   end

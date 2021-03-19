@@ -1,8 +1,8 @@
 %% ********************************************************************
-% Test B3MB
-%   4 x 4 Switch Matrix         4 Battery Packs to 4 Loads
-%    8 Digital Control Points   4 Battery Packs +  4 Loads On/Off control
-%   16 Analog Monitors          4 Battery Voltages + 4 Battery Currents +
+% Test B3MB 1 Batt 4 Load
+%   1 x 4 Switch Matrix         1 Battery Packs to 4 Loads
+%    8 Digital Control Points   1 Battery Packs +  4 Loads On/Off control
+%   16 Analog Monitors          1 Battery Voltages + 1 Battery Currents +
 %                               4 Load Voltages    + 4 Load Currentss
 %
 %   Test Procedure overview
@@ -91,18 +91,18 @@ pause(0.5)
 % and test / data Collection parameters
 
 % For 28V Battery Can
-Vin = [28.8, 28.8, 28.8, 28.8, 28.8];
-Rld = [25.0, 15.0, 10.0, 6.0, 3.0];
+%Vin = [28.8, 28.8, 28.8, 28.8, 28.8];
+%Rld = [25.0, 15.0, 10.0, 6.0, 3.0];
 
 % For 100V Battery Can
-%Vin = [100.8, 100.8, 100.8, 100.8, 100.8];
-%Rld = [35.0, 25.0, 20.0, 15.0, 10.0];
+Vin = [100.8, 100.8, 100.8, 100.8, 100.8];
+Rld = [35.0, 25.0, 20.0, 15.0, 10.0];
 
 Icd = Vin./Rld;
 JP  = [7, 8, 9, 10]; 
 
 NUM_CONDS = length(Vin); 
-NUM_BATTS = 4; % 28V: 4 BATTS 100V: 1 BATT, or # installed
+NUM_BATTS = 1; % 28V: 4 BATTS 100V: 1 BATT, or # installed
 NUM_LOADS = 4;
 NUM_VARS  = 23; % all variables
 NUM_SAMPS = 30;
@@ -134,14 +134,14 @@ for nc = 1:NUM_CONDS
     pause
     connSpec='Collecting Data for Condition %1.0f at connector J%1.0f\n';
     fprintf(connSpec, nc, JP(nl));
-%  Trying Swithching Loads on after Batts
-%    B3MB_cmd(sbsl, CAN_ID, B3MB_ALL_LOADS_ON, 3); % B3MB_ALL_LOADS_ON cmd. 3 tries. 
-%    pause(0.5)
+%     all_loads_on_off(sbsl, 1)           % turn all loads on, get some data
+%     sbsl.write_ack(CAN_ID, B3MB_CMD_ADDR, B3MB_ALL_LOADS_ON);  % turn all loads on, get some data
+    B3MB_cmd(sbsl, CAN_ID, B3MB_ALL_LOADS_ON, 3); % B3MB_ALL_LOADS_ON cmd. 3 tries. 
+    pause(0.5)
     for nb = 1:NUM_BATTS
+%       sbsl.write_ack(CAN_ID, BATT(nb), 1);
+%       sbsl.write_ack(CAN_ID, B3MB_CMD_ADDR, B3MB_BATT_ON(nb)); % 
       B3MB_cmd(sbsl, CAN_ID, B3MB_BATT_ON(nb), 3); % nb B3MB_BATT_ON cmd. 3 tries. 
-      pause(0.5)
-%  Trying Switching Loads on after Batts:
-      B3MB_cmd(sbsl, CAN_ID, B3MB_ALL_LOADS_ON, 3); % B3MB_ALL_LOADS_ON cmd. 3 tries. 
       pause(0.5)
       while(true)
         try
@@ -150,20 +150,26 @@ for nc = 1:NUM_CONDS
         catch MExc
           disp(MExc);
         end
+%         sbsl.write_ack(CAN_ID, B3MB_CMD_ADDR, B3MB_ALL_LOADS_OFF); % Turn All Loads off for safety
         B3MB_cmd(sbsl, CAN_ID, B3MB_ALL_LOADS_OFF, 3); % B3MB_ALL_LOADS_OFF cmd. 3 tries. 
         warning('Re-trying BATT %u',nb);
         fprintf('\nHit any Key when ready\n');
         pause
+%         sbsl.write_ack(CAN_ID, B3MB_CMD_ADDR, B3MB_ALL_LOADS_ON); 
         B3MB_cmd(sbsl, CAN_ID, B3MB_ALL_LOADS_ON, 3); % B3MB_ALL_LOADS_ON cmd. 3 tries. 
         pause(0.5)
       end
-      B3MB_cmd(sbsl, CAN_ID, B3MB_ALL_LOADS_OFF, 3); % B3MB_ALL_LOADS_OFF cmd. 3 tries. 
-      if nb < NUM_BATTS
+%       sbsl.write_ack(CAN_ID, BATT(nb+1), 1);  % always want one BATT on
+      if nb < 4
+%          sbsl.write_ack(CAN_ID, B3MB_CMD_ADDR, B3MB_BATT_ON(nb+1));  % always want one BATT on
         B3MB_cmd(sbsl, CAN_ID, B3MB_BATT_ON(nb+1), 3); % nb+1 B3MB_BATT_ON cmd. 3 tries. 
       else
+%          sbsl.write_ack(CAN_ID, B3MB_CMD_ADDR, B3MB_BATT_ON(1));  % always want one BATT on
         B3MB_cmd(sbsl, CAN_ID, B3MB_BATT_ON(1), 3); % B3MB_BATT1_ON cmd. 3 tries. 
       end
       pause(0.5)
+%       sbsl.write_ack(CAN_ID, BATT(nb), 0);
+%       sbsl.write_ack(CAN_ID, B3MB_CMD_ADDR, B3MB_BATT_OFF(nb));
       B3MB_cmd(sbsl, CAN_ID, B3MB_BATT_OFF(nb), 3); % nb B3MB_BATT_OFF cmd. 3 tries. 
 %       Mean and STDev      
       signal(nc,nl,nb,:) = mean(raw(nc,nl,nb,:,:), 5);
@@ -173,7 +179,9 @@ for nc = 1:NUM_CONDS
       measSpec = 'At BATT %1.0f meas V = %3.2f volts, I = %2.3f amps\n';
       fprintf(measSpec, nb, signal(nc,nl,nb,nb), signal(nc,nl,nb,nb+8));
     end
-% Should not need:    B3MB_cmd(sbsl, CAN_ID, B3MB_ALL_LOADS_OFF, 3); % B3MB_ALL_LOADS_OFF cmd. 3 tries. 
+%     all_loads_on_off(sbsl, 0)           % turn all loads off for safety
+%     sbsl.write_ack(CAN_ID, B3MB_CMD_ADDR, B3MB_ALL_LOADS_OFF);  % turn all loads off for safety
+      B3MB_cmd(sbsl, CAN_ID, B3MB_ALL_LOADS_OFF, 3); % B3MB_ALL_LOADS_OFF cmd. 3 tries. 
     pause(10)                           % let loads cool off
   end
 end
@@ -189,70 +197,64 @@ end
 % signal(Cnd, Ld, Bat, Var)
 figure, hold on  % For all Conditions, Battery Voltage Error by Actual Vin
 plot(Vin, signal(:, 1, 1, 1)-Vin', '-ro')
-plot(Vin, signal(:, 1, 2, 2)-Vin', '-rx')
-plot(Vin, signal(:, 1, 3, 3)-Vin', '-r^') % 
-plot(Vin, signal(:, 1, 4, 4)-Vin', '-rs') % 
+% plot(Vin, signal(:, 1, 2, 2)-Vin', '-rx')
+% plot(Vin, signal(:, 1, 3, 3)-Vin', '-r^') % 
+% plot(Vin, signal(:, 1, 4, 4)-Vin', '-rs') % 
 plot(Vin, signal(:, 2, 1, 1)-Vin', '-bo')
-plot(Vin, signal(:, 2, 2, 2)-Vin', '-bx')
-plot(Vin, signal(:, 2, 3, 3)-Vin', '-b^') % 
-plot(Vin, signal(:, 2, 4, 4)-Vin', '-bs') % 
+% plot(Vin, signal(:, 2, 2, 2)-Vin', '-bx')
+% plot(Vin, signal(:, 2, 3, 3)-Vin', '-b^') % 
+% plot(Vin, signal(:, 2, 4, 4)-Vin', '-bs') % 
 plot(Vin, signal(:, 3, 1, 1)-Vin', '-go')
-plot(Vin, signal(:, 3, 2, 2)-Vin', '-gx')
-plot(Vin, signal(:, 3, 3, 3)-Vin', '-g^') % 
-plot(Vin, signal(:, 3, 4, 4)-Vin', '-gs') % 
+% plot(Vin, signal(:, 3, 2, 2)-Vin', '-gx')
+% plot(Vin, signal(:, 3, 3, 3)-Vin', '-g^') % 
+% plot(Vin, signal(:, 3, 4, 4)-Vin', '-gs') % 
 plot(Vin, signal(:, 4, 1, 1)-Vin', '-ko')
-plot(Vin, signal(:, 4, 2, 2)-Vin', '-kx')
-plot(Vin, signal(:, 4, 3, 3)-Vin', '-k^') % 
-plot(Vin, signal(:, 4, 4, 4)-Vin', '-ks') % 
+% plot(Vin, signal(:, 4, 2, 2)-Vin', '-kx')
+% plot(Vin, signal(:, 4, 3, 3)-Vin', '-k^') % 
+% plot(Vin, signal(:, 4, 4, 4)-Vin', '-ks') % 
 
 hold off, grid on
 title('Battery Voltage vs. Actual');
 xlabel('Actual Voltage (V)'); ylabel('Measured Battery Voltage (V)');
-legend('BATT1xLOAD1', 'BATT2xLOAD1', 'BATT3xLOAD1', 'BATT4xLOAD1', ...
-       'BATT1xLOAD2', 'BATT2xLOAD2', 'BATT3xLOAD2', 'BATT4xLOAD2', ...
-       'BATT1xLOAD3', 'BATT2xLOAD3', 'BATT3xLOAD3', 'BATT4xLOAD3', ...
-       'BATT1xLOAD4', 'BATT2xLOAD4', 'BATT3xLOAD4', 'BATT4xLOAD4', ...
-       'Location','eastoutside');
+legend('BATT1xLOAD1', 'BATT1xLOAD2', 'BATT1xLOAD3', 'BATT1xLOAD4', ...
+       'Location','northwest');
 
 % signal(Cnd, Ld, Bat, Var)
 figure, hold on  % For all Conditions, Bus Voltage Error by Battery Vin
 plot(signal(:, :, 1, 1), signal(:, :, 1, 17)-signal(:, :, 1, 1), '-ro')
-plot(signal(:, :, 2, 2), signal(:, :, 2, 17)-signal(:, :, 2, 2), '-bx')
-plot(signal(:, :, 3, 3), signal(:, :, 3, 17)-signal(:, :, 3, 3), '-g^')
-plot(signal(:, :, 4, 4), signal(:, :, 4, 17)-signal(:, :, 4, 4), '-ks')
+% plot(signal(:, :, 2, 2), signal(:, :, 2, 17)-signal(:, :, 2, 2), '-bx')
+% plot(signal(:, :, 3, 3), signal(:, :, 3, 17)-signal(:, :, 3, 3), '-g^')
+% plot(signal(:, :, 4, 4), signal(:, :, 4, 17)-signal(:, :, 4, 4), '-ks')
 
 hold off, grid on
 title('Bus Voltage vs. Actual')
 xlabel('Battery Voltage (V)'); ylabel('Measured Bus Voltage Error (V)');
-legend('BATT1', 'BATT2', 'BATT3', 'BATT4', ...
+legend('BATT1', ...
        'Location','northwest');
 
 % signal(Cnd, Ld, Bat, Var)
 figure, hold on  % For all Conditions, Load Voltage Error by Battery Voltage
 plot(signal(:, 1, 1, 1), signal(:, 1, 1, 5)-signal(:, 1, 1, 1), '-ro')
-plot(signal(:, 1, 2, 2), signal(:, 1, 2, 5)-signal(:, 1, 2, 2), '-rx')
-plot(signal(:, 1, 3, 3), signal(:, 1, 3, 5)-signal(:, 1, 3, 3), '-r^') % 
-plot(signal(:, 1, 4, 4), signal(:, 1, 4, 5)-signal(:, 1, 4, 4), '-rs') % 
+% plot(signal(:, 1, 2, 2), signal(:, 1, 2, 5)-signal(:, 1, 2, 2), '-rx')
+% plot(signal(:, 1, 3, 3), signal(:, 1, 3, 5)-signal(:, 1, 3, 3), '-r^') % 
+% plot(signal(:, 1, 4, 4), signal(:, 1, 4, 5)-signal(:, 1, 4, 4), '-rs') % 
 plot(signal(:, 2, 1, 1), signal(:, 2, 1, 6)-signal(:, 2, 1, 1), '-bo')
-plot(signal(:, 2, 2, 2), signal(:, 2, 2, 6)-signal(:, 2, 2, 2), '-bx')
-plot(signal(:, 2, 3, 3), signal(:, 2, 3, 6)-signal(:, 2, 3, 3), '-b^') % 
-plot(signal(:, 2, 4, 4), signal(:, 2, 4, 6)-signal(:, 2, 4, 4), '-bs') % 
+% plot(signal(:, 2, 2, 2), signal(:, 2, 2, 6)-signal(:, 2, 2, 2), '-bx')
+% plot(signal(:, 2, 3, 3), signal(:, 2, 3, 6)-signal(:, 2, 3, 3), '-b^') % 
+% plot(signal(:, 2, 4, 4), signal(:, 2, 4, 6)-signal(:, 2, 4, 4), '-bs') % 
 plot(signal(:, 3, 1, 1), signal(:, 3, 1, 7)-signal(:, 3, 1, 1), '-go')
-plot(signal(:, 3, 2, 2), signal(:, 3, 2, 7)-signal(:, 3, 2, 2), '-gx')
-plot(signal(:, 3, 3, 3), signal(:, 3, 3, 7)-signal(:, 3, 3, 3), '-g^') % 
-plot(signal(:, 3, 4, 4), signal(:, 3, 4, 7)-signal(:, 3, 4, 4), '-gs') % 
+% plot(signal(:, 3, 2, 2), signal(:, 3, 2, 7)-signal(:, 3, 2, 2), '-gx')
+% plot(signal(:, 3, 3, 3), signal(:, 3, 3, 7)-signal(:, 3, 3, 3), '-g^') % 
+% plot(signal(:, 3, 4, 4), signal(:, 3, 4, 7)-signal(:, 3, 4, 4), '-gs') % 
 plot(signal(:, 4, 1, 1), signal(:, 4, 1, 8)-signal(:, 4, 1, 1), '-ko')
-plot(signal(:, 4, 2, 2), signal(:, 4, 2, 8)-signal(:, 4, 2, 2), '-kx')
-plot(signal(:, 4, 3, 3), signal(:, 4, 3, 8)-signal(:, 4, 3, 3), '-k^') % 
-plot(signal(:, 4, 4, 4), signal(:, 4, 4, 8)-signal(:, 4, 4, 4), '-ks') % 
+% plot(signal(:, 4, 2, 2), signal(:, 4, 2, 8)-signal(:, 4, 2, 2), '-kx')
+% plot(signal(:, 4, 3, 3), signal(:, 4, 3, 8)-signal(:, 4, 3, 3), '-k^') % 
+% plot(signal(:, 4, 4, 4), signal(:, 4, 4, 8)-signal(:, 4, 4, 4), '-ks') % 
 
 hold off, grid on
 title('Load Voltage Error vs. Battery Voltage')
 xlabel('Battery Voltage (V)'); ylabel('Measured Load Voltage Error (V)');
-legend('BATT1xLOAD1', 'BATT2xLOAD1', 'BATT3xLOAD1', 'BATT4xLOAD1', ...
-       'BATT1xLOAD2', 'BATT2xLOAD2', 'BATT3xLOAD2', 'BATT4xLOAD2', ...
-       'BATT1xLOAD3', 'BATT2xLOAD3', 'BATT3xLOAD3', 'BATT4xLOAD3', ...
-       'BATT1xLOAD4', 'BATT2xLOAD4', 'BATT3xLOAD4', 'BATT4xLOAD4', ...
+legend('BATT1xLOAD1', 'BATT1xLOAD2', 'BATT1xLOAD3', 'BATT1xLOAD4', ...
        'Location','eastoutside');
 
 
@@ -262,57 +264,51 @@ legend('BATT1xLOAD1', 'BATT2xLOAD1', 'BATT3xLOAD1', 'BATT4xLOAD1', ...
 % signal(Cnd, Ld, Bat, Var)
 figure, hold on  % For all Conditions, Battery Current by Load Outputs
 plot(signal(:, 1, 1, 5)./Rld', signal(:, 1, 1, 9),  '-ro')
-plot(signal(:, 1, 2, 5)./Rld', signal(:, 1, 2, 10), '-rx')
-plot(signal(:, 1, 3, 5)./Rld', signal(:, 1, 3, 11), '-r^')
-plot(signal(:, 1, 4, 5)./Rld', signal(:, 1, 4, 12), '-rs')
+% plot(signal(:, 1, 2, 5)./Rld', signal(:, 1, 2, 10), '-rx')
+% plot(signal(:, 1, 3, 5)./Rld', signal(:, 1, 3, 11), '-r^')
+% plot(signal(:, 1, 4, 5)./Rld', signal(:, 1, 4, 12), '-rs')
 plot(signal(:, 2, 1, 6)./Rld', signal(:, 2, 1, 9),  '-bo')
-plot(signal(:, 2, 2, 6)./Rld', signal(:, 2, 2, 10), '-bx')
-plot(signal(:, 2, 3, 6)./Rld', signal(:, 2, 3, 11), '-b^')
-plot(signal(:, 2, 4, 6)./Rld', signal(:, 2, 4, 12), '-bs')
+% plot(signal(:, 2, 2, 6)./Rld', signal(:, 2, 2, 10), '-bx')
+% plot(signal(:, 2, 3, 6)./Rld', signal(:, 2, 3, 11), '-b^')
+% plot(signal(:, 2, 4, 6)./Rld', signal(:, 2, 4, 12), '-bs')
 plot(signal(:, 3, 1, 7)./Rld', signal(:, 3, 1, 9),  '-go') % 
-plot(signal(:, 3, 2, 7)./Rld', signal(:, 3, 2, 10), '-gx') % 
-plot(signal(:, 3, 3, 7)./Rld', signal(:, 3, 3, 11), '-g^') % 
-plot(signal(:, 3, 4, 7)./Rld', signal(:, 3, 3, 11), '-gs') % 
+% plot(signal(:, 3, 2, 7)./Rld', signal(:, 3, 2, 10), '-gx') % 
+% plot(signal(:, 3, 3, 7)./Rld', signal(:, 3, 3, 11), '-g^') % 
+% plot(signal(:, 3, 4, 7)./Rld', signal(:, 3, 3, 11), '-gs') % 
 plot(signal(:, 4, 1, 8)./Rld', signal(:, 4, 1, 9),  '-ko') % 
-plot(signal(:, 4, 2, 8)./Rld', signal(:, 4, 2, 10), '-kx') % 
-plot(signal(:, 4, 3, 8)./Rld', signal(:, 4, 3, 11), '-k^') % 
-plot(signal(:, 4, 4, 8)./Rld', signal(:, 4, 3, 11), '-ks') % 
+% plot(signal(:, 4, 2, 8)./Rld', signal(:, 4, 2, 10), '-kx') % 
+% plot(signal(:, 4, 3, 8)./Rld', signal(:, 4, 3, 11), '-k^') % 
+% plot(signal(:, 4, 4, 8)./Rld', signal(:, 4, 3, 11), '-ks') % 
 
 hold off, grid on
 title('Battery Current Measured vs. Actual');
 xlabel('Actual Current (amps)'); ylabel('Measured Current (amps)');
-legend('BATT1xLOAD1', 'BATT2xLOAD1', 'BATT3xLOAD1', 'BATT4xLOAD1', ...
-       'BATT1xLOAD2', 'BATT2xLOAD2', 'BATT3xLOAD2', 'BATT4xLOAD2', ...
-       'BATT1xLOAD3', 'BATT2xLOAD3', 'BATT3xLOAD3', 'BATT4xLOAD3', ...
-       'BATT1xLOAD4', 'BATT2xLOAD4', 'BATT3xLOAD4', 'BATT4xLOAD4', ...
+legend('BATT1xLOAD1', 'BATT1xLOAD2', 'BATT1xLOAD3', 'BATT1xLOAD4', ...
        'Location','eastoutside');
 
 % signal(Cnd, Ld, Bat, Var)
 figure, hold on  % For all Conditions, Load Current by Battery Inputs
 plot(signal(:, 1, 1, 5)./Rld', signal(:, 1, 1, 13), '-ro')
-plot(signal(:, 1, 2, 5)./Rld', signal(:, 1, 2, 13), '-rx')
-plot(signal(:, 1, 3, 5)./Rld', signal(:, 1, 3, 13), '-r^') % 
-plot(signal(:, 1, 4, 5)./Rld', signal(:, 1, 4, 13), '-rs') % 
+% plot(signal(:, 1, 2, 5)./Rld', signal(:, 1, 2, 13), '-rx')
+% plot(signal(:, 1, 3, 5)./Rld', signal(:, 1, 3, 13), '-r^') % 
+% plot(signal(:, 1, 4, 5)./Rld', signal(:, 1, 4, 13), '-rs') % 
 plot(signal(:, 2, 1, 6)./Rld', signal(:, 2, 1, 14), '-bo')
-plot(signal(:, 2, 2, 6)./Rld', signal(:, 2, 2, 14), '-bx')
-plot(signal(:, 2, 3, 6)./Rld', signal(:, 2, 3, 14), '-b^') % 
-plot(signal(:, 2, 4, 6)./Rld', signal(:, 2, 4, 14), '-bs') % 
+% plot(signal(:, 2, 2, 6)./Rld', signal(:, 2, 2, 14), '-bx')
+% plot(signal(:, 2, 3, 6)./Rld', signal(:, 2, 3, 14), '-b^') % 
+% plot(signal(:, 2, 4, 6)./Rld', signal(:, 2, 4, 14), '-bs') % 
 plot(signal(:, 3, 1, 7)./Rld', signal(:, 3, 1, 15), '-go')
-plot(signal(:, 3, 2, 7)./Rld', signal(:, 3, 2, 15), '-gx')
-plot(signal(:, 3, 3, 7)./Rld', signal(:, 3, 3, 15), '-g^') % 
-plot(signal(:, 3, 4, 7)./Rld', signal(:, 3, 4, 15), '-gs') % 
+% plot(signal(:, 3, 2, 7)./Rld', signal(:, 3, 2, 15), '-gx')
+% plot(signal(:, 3, 3, 7)./Rld', signal(:, 3, 3, 15), '-g^') % 
+% plot(signal(:, 3, 4, 7)./Rld', signal(:, 3, 4, 15), '-gs') % 
 plot(signal(:, 4, 1, 8)./Rld', signal(:, 4, 1, 16), '-ko')
-plot(signal(:, 4, 2, 8)./Rld', signal(:, 4, 2, 16), '-kx')
-plot(signal(:, 4, 3, 8)./Rld', signal(:, 4, 3, 16), '-k^') % 
-plot(signal(:, 4, 4, 8)./Rld', signal(:, 4, 4, 16), '-ks') % 
+% plot(signal(:, 4, 2, 8)./Rld', signal(:, 4, 2, 16), '-kx')
+% plot(signal(:, 4, 3, 8)./Rld', signal(:, 4, 3, 16), '-k^') % 
+% plot(signal(:, 4, 4, 8)./Rld', signal(:, 4, 4, 16), '-ks') % 
 
 hold off, grid on
 title('Load Current Measured vs. Actual');
 xlabel('Actual Current (amps)'); ylabel('Measured Current (amps)');
-legend('BATT1xLOAD1', 'BATT2xLOAD1', 'BATT3xLOAD1', 'BATT4xLOAD1', ...
-       'BATT1xLOAD2', 'BATT2xLOAD2', 'BATT3xLOAD2', 'BATT4xLOAD2', ...
-       'BATT1xLOAD3', 'BATT2xLOAD3', 'BATT3xLOAD3', 'BATT4xLOAD3', ...
-       'BATT1xLOAD4', 'BATT2xLOAD4', 'BATT3xLOAD4', 'BATT4xLOAD4', ...
+legend('BATT1xLOAD1', 'BATT1xLOAD2', 'BATT1xLOAD3', 'BATT1xLOAD4', ...
        'Location','eastoutside');
 
 %% ********************************************************************
@@ -328,23 +324,23 @@ pB1L3 = polyfit(signal(:, 3, 1, 7)./Rld',signal(:, 3, 1,  9), 1);
 pB1L4 = polyfit(signal(:, 4, 1, 8)./Rld',signal(:, 4, 1,  9), 1);
 cal(1,:) = (pB1L1+pB1L2+pB1L3+pB1L4)/4;
 
-pB2L1 = polyfit(signal(:, 1, 2, 5)./Rld',signal(:, 1, 2, 10), 1);
-pB2L2 = polyfit(signal(:, 2, 2, 6)./Rld',signal(:, 2, 2, 10), 1);
-pB2L3 = polyfit(signal(:, 3, 2, 7)./Rld',signal(:, 3, 2, 10), 1);
-pB2L4 = polyfit(signal(:, 4, 2, 8)./Rld',signal(:, 4, 2, 10), 1);
-cal(2,:) = (pB2L1+pB2L2+pB2L3+pB2L4)/4;
+% pB2L1 = polyfit(signal(:, 1, 2, 5)./Rld',signal(:, 1, 2, 10), 1);
+% pB2L2 = polyfit(signal(:, 2, 2, 6)./Rld',signal(:, 2, 2, 10), 1);
+% pB2L3 = polyfit(signal(:, 3, 2, 7)./Rld',signal(:, 3, 2, 10), 1);
+% pB2L4 = polyfit(signal(:, 4, 2, 8)./Rld',signal(:, 4, 2, 10), 1);
+% cal(2,:) = (pB2L1+pB2L2+pB2L3+pB2L4)/4;
 
-pB3L1 = polyfit(signal(:, 1, 3, 5)./Rld',signal(:, 1, 3, 11), 1);
-pB3L2 = polyfit(signal(:, 2, 3, 6)./Rld',signal(:, 2, 3, 11), 1);
-pB3L3 = polyfit(signal(:, 3, 3, 7)./Rld',signal(:, 3, 3, 11), 1);
-pB3L4 = polyfit(signal(:, 4, 3, 8)./Rld',signal(:, 4, 3, 11), 1);
-cal(3,:) = (pB3L1+pB3L2+pB3L3+pB3L4)/4;
+% pB3L1 = polyfit(signal(:, 1, 3, 5)./Rld',signal(:, 1, 3, 11), 1);
+% pB3L2 = polyfit(signal(:, 2, 3, 6)./Rld',signal(:, 2, 3, 11), 1);
+% pB3L3 = polyfit(signal(:, 3, 3, 7)./Rld',signal(:, 3, 3, 11), 1);
+% pB3L4 = polyfit(signal(:, 4, 3, 8)./Rld',signal(:, 4, 3, 11), 1);
+% cal(3,:) = (pB3L1+pB3L2+pB3L3+pB3L4)/4;
 
-pB4L1 = polyfit(signal(:, 1, 4, 5)./Rld',signal(:, 1, 4, 12), 1);
-pB4L2 = polyfit(signal(:, 2, 4, 6)./Rld',signal(:, 2, 4, 12), 1);
-pB4L3 = polyfit(signal(:, 3, 4, 7)./Rld',signal(:, 3, 4, 12), 1);
-pB4L4 = polyfit(signal(:, 4, 4, 8)./Rld',signal(:, 4, 4, 12), 1);
-cal(4,:) = (pB4L1+pB4L2+pB4L3+pB4L4)/4;
+% pB4L1 = polyfit(signal(:, 1, 4, 5)./Rld',signal(:, 1, 4, 12), 1);
+% pB4L2 = polyfit(signal(:, 2, 4, 6)./Rld',signal(:, 2, 4, 12), 1);
+% pB4L3 = polyfit(signal(:, 3, 4, 7)./Rld',signal(:, 3, 4, 12), 1);
+% pB4L4 = polyfit(signal(:, 4, 4, 8)./Rld',signal(:, 4, 4, 12), 1);
+% cal(4,:) = (pB4L1+pB4L2+pB4L3+pB4L4)/4;
 
 % signal(Cnd, Ld, Bat, Var)
 cal(5,:) = polyfit(signal(:, 1, :, 5)./Rld',signal(:, 1, :, 13), 1);
@@ -368,55 +364,49 @@ plot(signal(:, 1, 1, 5)./Rld', sigcal(:, 1, 1, 9),  '-ro')
 plot(signal(:, 2, 1, 6)./Rld', sigcal(:, 2, 1, 9),  '-rx')
 plot(signal(:, 3, 1, 7)./Rld', sigcal(:, 3, 1, 9),  '-r^')%
 plot(signal(:, 4, 1, 8)./Rld', sigcal(:, 4, 1, 9),  '-rs')%
-plot(signal(:, 1, 2, 5)./Rld', sigcal(:, 1, 2, 10), '-bo')
-plot(signal(:, 2, 2, 6)./Rld', sigcal(:, 2, 2, 10), '-bx')
-plot(signal(:, 3, 2, 7)./Rld', sigcal(:, 3, 2, 10), '-b^')%
-plot(signal(:, 4, 2, 8)./Rld', sigcal(:, 4, 2, 10), '-bs')%
-plot(signal(:, 1, 3, 5)./Rld', sigcal(:, 1, 3, 11), '-go')
-plot(signal(:, 2, 3, 6)./Rld', sigcal(:, 2, 3, 11), '-gx')
-plot(signal(:, 3, 3, 7)./Rld', sigcal(:, 3, 3, 11), '-g^')%
-plot(signal(:, 4, 3, 8)./Rld', sigcal(:, 4, 3, 11), '-gs')%
-plot(signal(:, 1, 4, 5)./Rld', sigcal(:, 1, 4, 12), '-ko')
-plot(signal(:, 2, 4, 6)./Rld', sigcal(:, 2, 4, 12), '-kx')
-plot(signal(:, 3, 4, 7)./Rld', sigcal(:, 3, 4, 12), '-k^')%
-plot(signal(:, 4, 4, 8)./Rld', sigcal(:, 4, 4, 12), '-ks')%
+% plot(signal(:, 1, 2, 5)./Rld', sigcal(:, 1, 2, 10), '-bo')
+% plot(signal(:, 2, 2, 6)./Rld', sigcal(:, 2, 2, 10), '-bx')
+% plot(signal(:, 3, 2, 7)./Rld', sigcal(:, 3, 2, 10), '-b^')%
+% plot(signal(:, 4, 2, 8)./Rld', sigcal(:, 4, 2, 10), '-bs')%
+% plot(signal(:, 1, 3, 5)./Rld', sigcal(:, 1, 3, 11), '-go')
+% plot(signal(:, 2, 3, 6)./Rld', sigcal(:, 2, 3, 11), '-gx')
+% plot(signal(:, 3, 3, 7)./Rld', sigcal(:, 3, 3, 11), '-g^')%
+% plot(signal(:, 4, 3, 8)./Rld', sigcal(:, 4, 3, 11), '-gs')%
+% plot(signal(:, 1, 4, 5)./Rld', sigcal(:, 1, 4, 12), '-ko')
+% plot(signal(:, 2, 4, 6)./Rld', sigcal(:, 2, 4, 12), '-kx')
+% plot(signal(:, 3, 4, 7)./Rld', sigcal(:, 3, 4, 12), '-k^')%
+% plot(signal(:, 4, 4, 8)./Rld', sigcal(:, 4, 4, 12), '-ks')%
 
 hold off, grid on
 title('Battery Calibrated Current Measured vs. Actual');
 xlabel('Actual Current (amps)'); ylabel('Measured Current (amps)');
 legend('BATT1xLOAD1', 'BATT1xLOAD2', 'BATT1xLOAD3', 'BATT1xLOAD4', ...
-       'BATT2xLOAD1', 'BATT2xLOAD2', 'BATT2xLOAD3', 'BATT2xLOAD4', ...
-       'BATT3xLOAD1', 'BATT3xLOAD2', 'BATT3xLOAD3', 'BATT3xLOAD4', ...
-       'BATT4xLOAD1', 'BATT4xLOAD2', 'BATT4xLOAD3', 'BATT4xLOAD4', ...
        'Location','eastoutside');
 
 % signal(Cnd, Ld, Bat, Var)
 % sigcal(Cnd, Ld, Bat, Var)
 figure, hold on  % For all Conditions, Load Current by Battery Inputs
 plot(signal(:, 1, 1, 5)./Rld', sigcal(:, 1, 1, 13), '-ro')
-plot(signal(:, 1, 2, 5)./Rld', sigcal(:, 1, 2, 13), '-rx')
-plot(signal(:, 1, 3, 5)./Rld', sigcal(:, 1, 3, 13), '-r^')%
-plot(signal(:, 1, 4, 5)./Rld', sigcal(:, 1, 4, 13), '-rs')%
+% plot(signal(:, 1, 2, 5)./Rld', sigcal(:, 1, 2, 13), '-rx')
+% plot(signal(:, 1, 3, 5)./Rld', sigcal(:, 1, 3, 13), '-r^')%
+% plot(signal(:, 1, 4, 5)./Rld', sigcal(:, 1, 4, 13), '-rs')%
 plot(signal(:, 2, 1, 6)./Rld', sigcal(:, 2, 1, 14), '-bo')
-plot(signal(:, 2, 2, 6)./Rld', sigcal(:, 2, 2, 14), '-bx')
-plot(signal(:, 2, 3, 6)./Rld', sigcal(:, 2, 3, 14), '-b^')%
-plot(signal(:, 2, 4, 6)./Rld', sigcal(:, 2, 4, 14), '-bs')%
+% plot(signal(:, 2, 2, 6)./Rld', sigcal(:, 2, 2, 14), '-bx')
+% plot(signal(:, 2, 3, 6)./Rld', sigcal(:, 2, 3, 14), '-b^')%
+% plot(signal(:, 2, 4, 6)./Rld', sigcal(:, 2, 4, 14), '-bs')%
 plot(signal(:, 3, 1, 7)./Rld', sigcal(:, 3, 1, 15), '-go')
-plot(signal(:, 3, 2, 7)./Rld', sigcal(:, 3, 2, 15), '-gx')
-plot(signal(:, 3, 3, 7)./Rld', sigcal(:, 3, 3, 15), '-g^')%
-plot(signal(:, 3, 4, 7)./Rld', sigcal(:, 3, 4, 15), '-gs')%
+% plot(signal(:, 3, 2, 7)./Rld', sigcal(:, 3, 2, 15), '-gx')
+% plot(signal(:, 3, 3, 7)./Rld', sigcal(:, 3, 3, 15), '-g^')%
+% plot(signal(:, 3, 4, 7)./Rld', sigcal(:, 3, 4, 15), '-gs')%
 plot(signal(:, 4, 1, 8)./Rld', sigcal(:, 4, 1, 16), '-ko')
-plot(signal(:, 4, 2, 8)./Rld', sigcal(:, 4, 2, 16), '-kx')
-plot(signal(:, 4, 3, 8)./Rld', sigcal(:, 4, 3, 16), '-k^')%
-plot(signal(:, 4, 4, 8)./Rld', sigcal(:, 4, 4, 16), '-ks')%
+% plot(signal(:, 4, 2, 8)./Rld', sigcal(:, 4, 2, 16), '-kx')
+% plot(signal(:, 4, 3, 8)./Rld', sigcal(:, 4, 3, 16), '-k^')%
+% plot(signal(:, 4, 4, 8)./Rld', sigcal(:, 4, 4, 16), '-ks')%
 
 hold off, grid on
 title('Load Calibrated Current Measured vs. Actual');
 xlabel('Actual Current (amps)'); ylabel('Measured Current (amps)');
-legend('BATT1xLOAD1', 'BATT2xLOAD1', 'BATT3xLOAD1', 'BATT4xLOAD1', ...
-       'BATT1xLOAD2', 'BATT2xLOAD2', 'BATT3xLOAD2', 'BATT4xLOAD2', ...
-       'BATT1xLOAD3', 'BATT2xLOAD3', 'BATT3xLOAD3', 'BATT4xLOAD3', ...
-       'BATT1xLOAD4', 'BATT2xLOAD4', 'BATT3xLOAD4', 'BATT4xLOAD4', ...
+legend('BATT1xLOAD1', 'BATT1xLOAD2', 'BATT1xLOAD3', 'BATT1xLOAD4', ...
        'Location','eastoutside');
 
 %% *****************************************************************
@@ -427,29 +417,26 @@ legend('BATT1xLOAD1', 'BATT2xLOAD1', 'BATT3xLOAD1', 'BATT4xLOAD1', ...
 noise = std(raw,0,5);
 figure, hold on  % For all Conditions, Load Current SNR by Battery Inputs
 plot(signal(:, 1, 1, 5)./Rld', sigcal(:, 1, 1, 13)./noise(:,1,1,13), '-ro')
-plot(signal(:, 1, 2, 5)./Rld', sigcal(:, 1, 2, 13)./noise(:,1,2,13), '-rx')
-plot(signal(:, 1, 3, 5)./Rld', sigcal(:, 1, 3, 13)./noise(:,1,3,13), '-r^')%
-plot(signal(:, 1, 4, 5)./Rld', sigcal(:, 1, 4, 13)./noise(:,1,4,13), '-rs')%
+% plot(signal(:, 1, 2, 5)./Rld', sigcal(:, 1, 2, 13)./noise(:,1,2,13), '-rx')
+% plot(signal(:, 1, 3, 5)./Rld', sigcal(:, 1, 3, 13)./noise(:,1,3,13), '-r^')%
+% plot(signal(:, 1, 4, 5)./Rld', sigcal(:, 1, 4, 13)./noise(:,1,4,13), '-rs')%
 plot(signal(:, 2, 1, 6)./Rld', sigcal(:, 2, 1, 14)./noise(:,2,1,14), '-bo')
-plot(signal(:, 2, 2, 6)./Rld', sigcal(:, 2, 2, 14)./noise(:,2,2,14), '-bx')
-plot(signal(:, 2, 3, 6)./Rld', sigcal(:, 2, 3, 14)./noise(:,2,3,14), '-b^')%
-plot(signal(:, 2, 4, 6)./Rld', sigcal(:, 2, 4, 14)./noise(:,2,4,14), '-bs')%
+% plot(signal(:, 2, 2, 6)./Rld', sigcal(:, 2, 2, 14)./noise(:,2,2,14), '-bx')
+% plot(signal(:, 2, 3, 6)./Rld', sigcal(:, 2, 3, 14)./noise(:,2,3,14), '-b^')%
+% plot(signal(:, 2, 4, 6)./Rld', sigcal(:, 2, 4, 14)./noise(:,2,4,14), '-bs')%
 plot(signal(:, 3, 1, 7)./Rld', sigcal(:, 3, 1, 15)./noise(:,3,1,15), '-go')
-plot(signal(:, 3, 2, 7)./Rld', sigcal(:, 3, 2, 15)./noise(:,3,2,15), '-gx')
-plot(signal(:, 3, 3, 7)./Rld', sigcal(:, 3, 3, 15)./noise(:,3,3,15), '-g^')%
-plot(signal(:, 3, 4, 7)./Rld', sigcal(:, 3, 4, 15)./noise(:,3,4,15), '-gs')%
+% plot(signal(:, 3, 2, 7)./Rld', sigcal(:, 3, 2, 15)./noise(:,3,2,15), '-gx')
+% plot(signal(:, 3, 3, 7)./Rld', sigcal(:, 3, 3, 15)./noise(:,3,3,15), '-g^')%
+% plot(signal(:, 3, 4, 7)./Rld', sigcal(:, 3, 4, 15)./noise(:,3,4,15), '-gs')%
 plot(signal(:, 4, 1, 8)./Rld', sigcal(:, 4, 1, 16)./noise(:,4,1,15), '-ko')
-plot(signal(:, 4, 2, 8)./Rld', sigcal(:, 4, 2, 16)./noise(:,4,2,15), '-kx')
-plot(signal(:, 4, 3, 8)./Rld', sigcal(:, 4, 3, 16)./noise(:,4,3,15), '-k^')%
-plot(signal(:, 4, 4, 8)./Rld', sigcal(:, 4, 4, 16)./noise(:,4,4,15), '-ks')%
+% plot(signal(:, 4, 2, 8)./Rld', sigcal(:, 4, 2, 16)./noise(:,4,2,15), '-kx')
+% plot(signal(:, 4, 3, 8)./Rld', sigcal(:, 4, 3, 16)./noise(:,4,3,15), '-k^')%
+% plot(signal(:, 4, 4, 8)./Rld', sigcal(:, 4, 4, 16)./noise(:,4,4,15), '-ks')%
 
 hold off, grid on
 title('Load Calibrated Current SNR vs. Actual S');
 xlabel('Actual Current (amps)'); ylabel('SNR');
-legend('BATT1xLOAD1', 'BATT2xLOAD1', 'BATT3xLOAD1', 'BATT4xLOAD1', ...
-       'BATT1xLOAD2', 'BATT2xLOAD2', 'BATT3xLOAD2', 'BATT4xLOAD2', ...
-       'BATT1xLOAD3', 'BATT2xLOAD3', 'BATT3xLOAD3', 'BATT4xLOAD3', ...
-       'BATT1xLOAD4', 'BATT2xLOAD4', 'BATT3xLOAD4', 'BATT4xLOAD4', ...
+legend('BATT1xLOAD1', 'BATT1xLOAD2', 'BATT1xLOAD3', 'BATT1xLOAD4', ...
        'Location','eastoutside');
 
 %% *****************************************************************

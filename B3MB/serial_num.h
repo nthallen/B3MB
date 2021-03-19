@@ -28,11 +28,18 @@
     #error Must define SUBBUS_BOARD_SN in Build Properties
   #endif
 
+  #if SUBBUS_BOARD_SN == 0
+  #define SUBBUS_BOARD_INSTRUMENT     "SCoPEx"
+  #define SUBBUS_BOARD_INSTRUMENT_ID  1
+  #define SUBBUS_BOARD_LOCATION       "Test"
+  #define CAN_BOARD_ID                1
+  #endif
+
   #if SUBBUS_BOARD_SN == 1
-    #define SUBBUS_BOARD_INSTRUMENT     "SCoPEx"
-    #define SUBBUS_BOARD_INSTRUMENT_ID  1
-    #define SUBBUS_BOARD_LOCATION       "100V3"
-	#define CAN_BOARD_ID                8
+  #define SUBBUS_BOARD_INSTRUMENT     "SCoPEx"
+  #define SUBBUS_BOARD_INSTRUMENT_ID  1
+  #define SUBBUS_BOARD_LOCATION       "100V3"
+  #define CAN_BOARD_ID                8
   #endif
 
   #if SUBBUS_BOARD_SN == 2
