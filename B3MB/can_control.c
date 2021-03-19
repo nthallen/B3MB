@@ -1,5 +1,5 @@
 #include <string.h>
-#include "driver_init.h"
+#include "pins_perphs_init.h"
 #include "can_control.h"
 
 bool can_tx_completed = true;

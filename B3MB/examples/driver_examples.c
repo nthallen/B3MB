@@ -7,8 +7,9 @@
  */
 
 #include "driver_examples.h"
-#include "pins_perphs_init.h"
+#include "driver_init.h"
 #include "utils.h"
+
 static uint8_t I2C_Batt_example_str[12] = "Hello World!";
 
 void I2C_Batt_tx_complete(struct i2c_m_async_desc *const i2c)
@@ -19,10 +20,10 @@ void I2C_Batt_example(void)
 {
 	struct io_descriptor *I2C_Batt_io;
 
-	i2c_m_async_get_io_descriptor(&I2C_BATT, &I2C_Batt_io);
-	i2c_m_async_enable(&I2C_BATT);
-	i2c_m_async_register_callback(&I2C_BATT, I2C_M_ASYNC_TX_COMPLETE, (FUNC_PTR)I2C_Batt_tx_complete);
-	i2c_m_async_set_slaveaddr(&I2C_BATT, 0x12, I2C_M_SEVEN);
+	i2c_m_async_get_io_descriptor(&I2C_Batt, &I2C_Batt_io);
+	i2c_m_async_enable(&I2C_Batt);
+	i2c_m_async_register_callback(&I2C_Batt, I2C_M_ASYNC_TX_COMPLETE, (FUNC_PTR)I2C_Batt_tx_complete);
+	i2c_m_async_set_slaveaddr(&I2C_Batt, 0x12, I2C_M_SEVEN);
 
 	io_write(I2C_Batt_io, I2C_Batt_example_str, 12);
 }
@@ -37,10 +38,10 @@ void I2C_Temp_example(void)
 {
 	struct io_descriptor *I2C_Temp_io;
 
-	i2c_m_async_get_io_descriptor(&I2C_TMPR, &I2C_Temp_io);
-	i2c_m_async_enable(&I2C_TMPR);
-	i2c_m_async_register_callback(&I2C_TMPR, I2C_M_ASYNC_TX_COMPLETE, (FUNC_PTR)I2C_Temp_tx_complete);
-	i2c_m_async_set_slaveaddr(&I2C_TMPR, 0x12, I2C_M_SEVEN);
+	i2c_m_async_get_io_descriptor(&I2C_Temp, &I2C_Temp_io);
+	i2c_m_async_enable(&I2C_Temp);
+	i2c_m_async_register_callback(&I2C_Temp, I2C_M_ASYNC_TX_COMPLETE, (FUNC_PTR)I2C_Temp_tx_complete);
+	i2c_m_async_set_slaveaddr(&I2C_Temp, 0x12, I2C_M_SEVEN);
 
 	io_write(I2C_Temp_io, I2C_Temp_example_str, 12);
 }
@@ -55,10 +56,10 @@ void I2C_Load_example(void)
 {
 	struct io_descriptor *I2C_Load_io;
 
-	i2c_m_async_get_io_descriptor(&I2C_LOAD, &I2C_Load_io);
-	i2c_m_async_enable(&I2C_LOAD);
-	i2c_m_async_register_callback(&I2C_LOAD, I2C_M_ASYNC_TX_COMPLETE, (FUNC_PTR)I2C_Load_tx_complete);
-	i2c_m_async_set_slaveaddr(&I2C_LOAD, 0x12, I2C_M_SEVEN);
+	i2c_m_async_get_io_descriptor(&I2C_Load, &I2C_Load_io);
+	i2c_m_async_enable(&I2C_Load);
+	i2c_m_async_register_callback(&I2C_Load, I2C_M_ASYNC_TX_COMPLETE, (FUNC_PTR)I2C_Load_tx_complete);
+	i2c_m_async_set_slaveaddr(&I2C_Load, 0x12, I2C_M_SEVEN);
 
 	io_write(I2C_Load_io, I2C_Load_example_str, 12);
 }
