@@ -1,15 +1,16 @@
 /* ********************************************************************************************
  * commands.c
- * 
+ *
  * Command Interface for 8 switches and 8 Alert/Status bits
- * 
+ *
  * Rev_00: Marco Rivero 4:55 PM 10/15/2020
- * 	Derived from WI-ICOS-MAINS/commands.c 
- * 
- */ 
+ * 	Derived from WI-ICOS-MAINS/commands.c
+ *
+ */
 #include "pins_perphs_init.h"
 #include "commands.h"
 #include "subbus.h"
+#include "Timer_Setup.h"
 
 static void update_status(uint16_t *status, uint8_t pin, uint16_t bit) {
   if (gpio_get_pin_level(pin)) {
@@ -23,6 +24,14 @@ static subbus_cache_word_t cmd_cache[CMD_HIGH_ADDR-CMD_BASE_ADDR+1] = {
   { 0, 0, true, false,  true, false, false }, // Offset 0: R: Command/Fault Status. W: Command value
   { 0, 0, true, false, false, false, false }  // Offset 1: R: LED/Misc IO Status
 };
+
+#ifdef ASCENDERSEQ
+static bool Load2Cmd = false;
+enum ascseq_state_t {ascseq_IdleOff, ascseq_Load1On, ascseq_Load2On,
+                    ascseq_Load1Off, ascseq_IdleOn, ascseq_LoadsOff};
+static enum ascseq_state_t ascseq_state = ascseq_IdleOff;
+static uint32_t ascseq_prechg_start;
+#endif
 
 // * CMD_BASE_ADDR 0x40
 static void cmd_poll(void) {
@@ -38,10 +47,24 @@ static void cmd_poll(void) {
       case 5:  gpio_set_pin_level(BATT3_ON, true); break;	// Batt 3 ON
       case 6:  gpio_set_pin_level(BATT4_ON, false); break;	// Batt 4 OFF
       case 7:  gpio_set_pin_level(BATT4_ON, true); break;	// Batt 4 ON
+#ifndef ASCENDERSEQ
       case 8:  gpio_set_pin_level(LOAD1_ON, false); break;	// Load 1 OFF
       case 9:  gpio_set_pin_level(LOAD1_ON, true); break;	// Load 1 ON
-      case 10: gpio_set_pin_level(LOAD2_ON, false); break;	// Load 2 OFF
-      case 11: gpio_set_pin_level(LOAD2_ON, true); break;	// Load 2 ON
+#endif
+      case 10:
+#ifdef ASCENDERSEQ
+        Load2Cmd = false;
+#else
+        gpio_set_pin_level(LOAD2_ON, false); // Load 2 OFF
+#endif
+        break;
+      case 11:
+#ifdef ASCENDERSEQ
+        Load2Cmd = true;
+#else
+        gpio_set_pin_level(LOAD2_ON, true); // Load 2 ON
+#endif
+        break;
       case 12: gpio_set_pin_level(LOAD3_ON, false); break;	// Load 3 OFF
       case 13: gpio_set_pin_level(LOAD3_ON, true); break;	// Load 3 ON
       case 14: gpio_set_pin_level(LOAD4_ON, false); break;	// Load 4 OFF
@@ -78,6 +101,52 @@ static void cmd_poll(void) {
         break;
     }
   }
+
+#ifdef ASCENDERSEQ
+  switch (ascseq_state) {
+    case ascseq_IdleOff:
+      if (Load2Cmd) {
+        gpio_set_pin_level(LOAD1_ON, true);
+        ascseq_prechg_start = count_1msec;
+        ascseq_state = ascseq_Load1On;
+      }
+      break;
+    case ascseq_Load1On:
+      if (!Load2Cmd) {
+        ascseq_state = ascseq_LoadsOff;
+      } else if (count_1msec - ascseq_prechg_start > 500) {
+        int16_t rawV;
+        subbus_read(0x2A, (uint16_t *)&rawV);
+        if (rawV >= 12356) {
+          gpio_set_pin_level(LOAD2_ON, true);
+          ascseq_state = ascseq_Load2On;
+        } else if (count_1msec - ascseq_prechg_start > 600) {
+          ascseq_state = ascseq_LoadsOff;
+        }
+      }
+      break;
+    case ascseq_Load2On:
+      if (!Load2Cmd) {
+        ascseq_state = ascseq_LoadsOff;
+      } else if (count_1msec - ascseq_prechg_start > 1000) {
+        gpio_set_pin_level(LOAD1_ON, false);
+        ascseq_state = ascseq_IdleOn;
+      }
+      break;
+    case ascseq_IdleOn:
+      if (!Load2Cmd) ascseq_state = ascseq_LoadsOff;
+      break;
+    case ascseq_LoadsOff:
+      gpio_set_pin_level(LOAD1_ON, false);	// Load 1 OFF
+      gpio_set_pin_level(LOAD2_ON, false);	// Load 1 OFF
+      ascseq_state = ascseq_IdleOff;
+      break;
+    default:
+      ascseq_state = ascseq_LoadsOff;
+      break;
+  }
+#endif
+
 // Update current Batt/Load Switch and Alert status
 //  * CMD_BASE_ADDR 0x40
   status = 0;
@@ -98,7 +167,7 @@ static void cmd_poll(void) {
   update_status(&status, LOAD3_FLT, 0x4000);
   update_status(&status, LOAD4_FLT, 0x8000);
   subbus_cache_update(&sb_cmd, CMD_BASE_ADDR, status);
-// Turn LEDs on according to status  
+// Turn LEDs on according to status
   gpio_set_pin_level(STATUS_O, (status & 0x00FF ));
   gpio_set_pin_level(FAULT_O, (~status & 0xFF00 ));
 

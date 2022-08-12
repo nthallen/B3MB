@@ -70,6 +70,15 @@
     #define CAN_BOARD_ID                7
   #endif
 
+  #if SUBBUS_BOARD_SN == 101
+  #define SUBBUS_BOARD_INSTRUMENT     "SCoPEx"
+  #define SUBBUS_BOARD_INSTRUMENT_ID  1
+  #define SUBBUS_BOARD_LOCATION       "100V2"
+  #define CAN_BOARD_ID                2
+  #define ASCENDERSEQ
+  #endif
+
+
   #if ! defined(CAN_BOARD_ID) || ! defined(SUBBUS_BOARD_LOCATION)
     #error Specified CAN_BOARD_ID or LOCATION apparently not configured in serial_num.h
   #endif
