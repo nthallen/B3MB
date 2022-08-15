@@ -20,63 +20,71 @@
   // These parameters are common to all boards built with this code
   #define SUBBUS_BOARD_ID			  17
   #define SUBBUS_BOARD_BOARD_TYPE	  "B3MB"
-  #define SUBBUS_BOARD_BOARD_REV	  "Rev A"
-  #define SUBBUS_BOARD_FIRMWARE_REV	  "V1.2"
-  #define SUBBUS_BOARD_BUILD_NUM	  9
+  #define SUBBUS_BOARD_FIRMWARE_REV	  "V1.3"
+  #define SUBBUS_BOARD_BUILD_NUM	  10
 
   #if ! defined(SUBBUS_BOARD_SN)
     #error Must define SUBBUS_BOARD_SN in Build Properties
   #endif
 
   #if SUBBUS_BOARD_SN == 0
-  #define SUBBUS_BOARD_INSTRUMENT     "SCoPEx"
-  #define SUBBUS_BOARD_INSTRUMENT_ID  1
-  #define SUBBUS_BOARD_LOCATION       "Test"
-  #define CAN_BOARD_ID                1
-  #endif
-
-  #if SUBBUS_BOARD_SN == 1
-  #define SUBBUS_BOARD_INSTRUMENT     "SCoPEx"
-  #define SUBBUS_BOARD_INSTRUMENT_ID  1
-  #define SUBBUS_BOARD_LOCATION       "100V3"
-  #define CAN_BOARD_ID                8
-  #endif
-
-  #if SUBBUS_BOARD_SN == 2
     #define SUBBUS_BOARD_INSTRUMENT     "SCoPEx"
     #define SUBBUS_BOARD_INSTRUMENT_ID  1
-    #define SUBBUS_BOARD_LOCATION       "28V1"
-	#define CAN_BOARD_ID                2
+    #define SUBBUS_BOARD_BOARD_REV	    "Rev A"
+    #define SUBBUS_BOARD_LOCATION       "Test"
+    #define CAN_BOARD_ID                0
   #endif
 
-  #if SUBBUS_BOARD_SN == 3
+  #if SUBBUS_BOARD_SN == 101
     #define SUBBUS_BOARD_INSTRUMENT     "SCoPEx"
     #define SUBBUS_BOARD_INSTRUMENT_ID  1
-    #define SUBBUS_BOARD_LOCATION       "28V2"
-	#define CAN_BOARD_ID                3
-  #endif
-
-  #if SUBBUS_BOARD_SN == 4
-    #define SUBBUS_BOARD_INSTRUMENT     "SCoPEx"
-    #define SUBBUS_BOARD_INSTRUMENT_ID  1
+    #define SUBBUS_BOARD_BOARD_REV	    "Rev B"
     #define SUBBUS_BOARD_LOCATION       "100V1"
-	#define CAN_BOARD_ID                6
+    #define CAN_BOARD_ID                1
+  #endif
+
+  #if SUBBUS_BOARD_SN == 102
+    #define SUBBUS_BOARD_INSTRUMENT     "SCoPEx"
+    #define SUBBUS_BOARD_INSTRUMENT_ID  1
+    #define SUBBUS_BOARD_BOARD_REV	    "Rev B"
+    #define SUBBUS_BOARD_LOCATION       "100V2"
+	#define CAN_BOARD_ID                2
+	#define ASCENDERSEQ
+  #endif
+
+  #if SUBBUS_BOARD_SN == 103
+    #define SUBBUS_BOARD_INSTRUMENT     "SCoPEx"
+    #define SUBBUS_BOARD_INSTRUMENT_ID  1
+    #define SUBBUS_BOARD_BOARD_REV	    "Rev B"
+	#define SUBBUS_BOARD_LOCATION       "100V3"
+	#define CAN_BOARD_ID                3
+	#define ASCENDERSEQ
+  #endif
+
+  #if SUBBUS_BOARD_SN == 104
+    #define SUBBUS_BOARD_INSTRUMENT     "SCoPEx"
+    #define SUBBUS_BOARD_INSTRUMENT_ID  1
+    #define SUBBUS_BOARD_BOARD_REV	    "Rev B"
+	#define SUBBUS_BOARD_LOCATION       "100V4"
+	#define CAN_BOARD_ID                4
   #endif
 
   #if SUBBUS_BOARD_SN == 5
     #define SUBBUS_BOARD_INSTRUMENT     "SCoPEx"
     #define SUBBUS_BOARD_INSTRUMENT_ID  1
-    #define SUBBUS_BOARD_LOCATION       "100V2"
-    #define CAN_BOARD_ID                7
+	#define SUBBUS_BOARD_BOARD_REV	    "Rev A"
+    #define SUBBUS_BOARD_LOCATION       "100V5"
+    #define CAN_BOARD_ID                5
+  #endif
+  
+  #if SUBBUS_BOARD_SN == 3
+    #define SUBBUS_BOARD_INSTRUMENT     "SCoPEx"
+    #define SUBBUS_BOARD_INSTRUMENT_ID  1
+    #define SUBBUS_BOARD_BOARD_REV	    "Rev A"
+	#define SUBBUS_BOARD_LOCATION       "28v1"
+    #define CAN_BOARD_ID                11
   #endif
 
-  #if SUBBUS_BOARD_SN == 101
-  #define SUBBUS_BOARD_INSTRUMENT     "SCoPEx"
-  #define SUBBUS_BOARD_INSTRUMENT_ID  1
-  #define SUBBUS_BOARD_LOCATION       "100V2"
-  #define CAN_BOARD_ID                2
-  #define ASCENDERSEQ
-  #endif
 
 
   #if ! defined(CAN_BOARD_ID) || ! defined(SUBBUS_BOARD_LOCATION)
